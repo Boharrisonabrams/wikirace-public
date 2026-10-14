@@ -1,0 +1,15 @@
+node_modules
+**/node_modules
+**/dist
+.git
+.claude
+docs
+supabase
+.migration-backup
+.next
+.vercel
+test-results
+playwright-report
+e2e
+*.env*
+.replit*

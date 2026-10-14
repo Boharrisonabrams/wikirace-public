@@ -1,0 +1,26 @@
+{
+  "cli": {
+    "version": ">= 16.18.0",
+    "appVersionSource": "remote",
+    "promptToConfigurePushNotifications": false
+  },
+  "build": {
+    "preview": {
+      "channel": "preview",
+      "distribution": "internal",
+      "environment": "preview"
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production",
+      "environment": "production"
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "0000000000"
+      }
+    }
+  }
+}

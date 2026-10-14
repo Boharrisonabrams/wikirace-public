@@ -1,0 +1,27 @@
+{
+  "name": "WikiRace",
+  "short_name": "WikiRace",
+  "description": "Race from one Wikipedia article to another using only the links inside. Fewest clicks wins.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f2eb",
+  "theme_color": "#f5f2eb",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

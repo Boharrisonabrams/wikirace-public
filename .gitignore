@@ -1,0 +1,83 @@
+# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# compiled output
+dist
+tmp
+out-tsc
+*.tsbuildinfo
+.expo
+.expo-shared
+
+# dependencies
+node_modules
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+
+# System Files
+.DS_Store
+Thumbs.db
+
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
+
+# Replit
+.cache/
+.local/
+
+# local env files
+.env.local
+*.env.local
+
+# playwright
+artifacts/web/test-results/
+artifacts/web/playwright-report/
+.env.*.local
+
+# local tooling & legacy artifacts
+.claude/launch.json
+.claude/worktrees/
+.playwright-mcp/
+.next/
+.vercel/
+next-env.d.ts
+.env.local.save
+artifacts/*/.claude/
+
+# env files (mobile)
+artifacts/mobile/.env
+.agents/
+.worktrees/
+
+# public repo safety: never commit env files or signing keys
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p8
+*.p12
+*.mobileprovision
