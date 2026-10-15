@@ -16,12 +16,9 @@ describe("formatShareIntent", () => {
         clicks: 9,
         elapsedSeconds: 182,
         challengeUrl: link,
-      }),
+      })
     ).toEqual({
-      text:
-        "I finished Skateboarding → Castle.\n" +
-        "\n9 clicks · 3:02\n\n" +
-        "Can you beat me?",
+      text: "I finished Skateboarding → Castle.\n" + "\n9 clicks · 3:02\n\n" + "Can you beat me?",
       url: link,
     });
   });
@@ -36,12 +33,9 @@ describe("formatShareIntent", () => {
         clicks: 4,
         elapsedSeconds: 0,
         challengeUrl: link,
-      }),
+      })
     ).toEqual({
-      text:
-        "I finished Skateboarding → Castle.\n" +
-        "\n4 clicks\n\n" +
-        "Can you beat me?",
+      text: "I finished Skateboarding → Castle.\n" + "\n4 clicks\n\n" + "Can you beat me?",
       url: link,
     });
   });
@@ -55,12 +49,9 @@ describe("formatShareIntent", () => {
         endTitle: "Castle",
         clicks: 4,
         challengeUrl: link,
-      }),
+      })
     ).toEqual({
-      text:
-        "I finished Skateboarding → Castle.\n" +
-        "\n4 clicks\n\n" +
-        "Can you beat me?",
+      text: "I finished Skateboarding → Castle.\n" + "\n4 clicks\n\n" + "Can you beat me?",
       url: link,
     });
   });
@@ -80,14 +71,9 @@ describe("formatShareIntent", () => {
     } as never);
 
     expect(copy).toEqual({
-      text:
-        "I finished Skateboarding → Castle.\n" +
-        "\n4 clicks · 1:15\n\n" +
-        "Can you beat me?",
+      text: "I finished Skateboarding → Castle.\n" + "\n4 clicks · 1:15\n\n" + "Can you beat me?",
       url: link,
     });
-    expect(JSON.stringify(copy)).not.toMatch(
-      /Sport|Architecture|secret-session|secret-user/,
-    );
+    expect(JSON.stringify(copy)).not.toMatch(/Sport|Architecture|secret-session|secret-user/);
   });
 });

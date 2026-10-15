@@ -18,12 +18,9 @@ import type { TimingAction } from "../lib/game/timing";
 import { loadCompletionResultContext } from "../lib/game/completion-result";
 
 const router = Router();
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function isWikipediaVerificationFailure(
-  error: unknown,
-): error is WikipediaUpstreamError {
+function isWikipediaVerificationFailure(error: unknown): error is WikipediaUpstreamError {
   return (
     error instanceof WikipediaUpstreamError ||
     (error instanceof Error && error.name === "WikipediaUpstreamError")
@@ -53,7 +50,7 @@ async function loadSessionChallengeMetadata(
   session: {
     challenge_id?: string | null;
     friend_challenge_id?: string | null;
-  },
+  }
 ) {
   if (session.friend_challenge_id) {
     const { data } = await admin
@@ -98,7 +95,7 @@ async function sessionJsonWithMetadata(
     startDescription?: string | null;
     endDescription?: string | null;
     searchTier?: string | null;
-  },
+  }
 ) {
   const resolvedMetadata =
     metadata ??
@@ -132,8 +129,7 @@ router.post("/game/start", async (req, res) => {
     const user = await getRequestUser(req);
     if (!user) return res.status(401).json({ error: "Unauthorized" });
 
-    const { challengeType, challengeId, friendChallengeId, timeZone, replay } =
-      req.body ?? {};
+    const { challengeType, challengeId, friendChallengeId, timeZone, replay } = req.body ?? {};
     if (!["daily", "practice", "friend"].includes(challengeType)) {
       return res.status(400).json({ error: "Invalid challengeType" });
     }
@@ -164,8 +160,7 @@ router.post("/game/start", async (req, res) => {
     let challengeEndDescription: string | null = null;
 
     if (challengeType === "daily") {
-      if (!challengeId)
-        return res.status(400).json({ error: "challengeId is required" });
+      if (!challengeId) return res.status(400).json({ error: "challengeId is required" });
 
       const dailyTimeZone = timeZone === undefined ? "UTC" : timeZone;
       if (typeof dailyTimeZone !== "string") {
@@ -181,12 +176,11 @@ router.post("/game/start", async (req, res) => {
       const { data: challenge } = await admin
         .from("daily_challenges")
         .select(
-          "id, challenge_date, start_article_title, end_article_title, end_article_aliases, start_description, end_description",
+          "id, challenge_date, start_article_title, end_article_title, end_article_aliases, start_description, end_description"
         )
         .eq("id", challengeId)
         .single();
-      if (!challenge)
-        return res.status(404).json({ error: "Challenge not found" });
+      if (!challenge) return res.status(404).json({ error: "Challenge not found" });
       challengeEndArticleAliases = challenge.end_article_aliases ?? null;
       challengeStartDescription = challenge.start_description ?? null;
       challengeEndDescription = challenge.end_description ?? null;
@@ -197,10 +191,7 @@ router.post("/game/start", async (req, res) => {
       }
 
       if (friendChallengeId) {
-        const sharedChallenge = await loadSharedChallenge(
-          admin,
-          friendChallengeId,
-        );
+        const sharedChallenge = await loadSharedChallenge(admin, friendChallengeId);
         if (
           !sharedChallenge ||
           sharedChallenge.challenge_type !== "daily" ||
@@ -221,20 +212,13 @@ router.post("/game/start", async (req, res) => {
         .eq("is_official", true)
         .maybeSingle();
       if (officialError) {
-        req.log.error(
-          { err: officialError },
-          "Error loading official Daily session",
-        );
+        req.log.error({ err: officialError }, "Error loading official Daily session");
         return res.status(500).json({ error: "Failed to create game session" });
       }
 
       if (isOfficial && official) {
         let attributedOfficial = official;
-        if (
-          friendChallengeRef &&
-          !official.completed &&
-          !official.friend_challenge_id
-        ) {
+        if (friendChallengeRef && !official.completed && !official.friend_challenge_id) {
           const { data: updatedOfficial, error: attributionError } = await admin
             .from("game_sessions")
             .update({ friend_challenge_id: friendChallengeRef })
@@ -243,13 +227,8 @@ router.post("/game/start", async (req, res) => {
             .select()
             .maybeSingle();
           if (attributionError) {
-            req.log.error(
-              { err: attributionError },
-              "Error attributing shared Daily session",
-            );
-            return res
-              .status(500)
-              .json({ error: "Failed to create game session" });
+            req.log.error({ err: attributionError }, "Error attributing shared Daily session");
+            return res.status(500).json({ error: "Failed to create game session" });
           }
           attributedOfficial = updatedOfficial ?? official;
         }
@@ -283,8 +262,7 @@ router.post("/game/start", async (req, res) => {
         return res.status(400).json({ error: "friendChallengeId is required" });
       }
       const challenge = await loadSharedChallenge(admin, friendChallengeId);
-      if (!challenge)
-        return res.status(404).json({ error: "Challenge not found" });
+      if (!challenge) return res.status(404).json({ error: "Challenge not found" });
       challengeEndArticleAliases = challenge.end_article_aliases ?? null;
       challengeStartDescription = challenge.start_description ?? null;
       challengeEndDescription = challenge.end_description ?? null;
@@ -315,8 +293,7 @@ router.post("/game/start", async (req, res) => {
     } else {
       if (friendChallengeId) {
         const challenge = await loadSharedChallenge(admin, friendChallengeId);
-        if (!challenge)
-          return res.status(404).json({ error: "Challenge not found" });
+        if (!challenge) return res.status(404).json({ error: "Challenge not found" });
         challengeEndArticleAliases = challenge.end_article_aliases ?? null;
         challengeStartDescription = challenge.start_description ?? null;
         challengeEndDescription = challenge.end_description ?? null;
@@ -427,10 +404,7 @@ router.post("/game/start", async (req, res) => {
           alreadyCompleted: existing.completed,
         });
       }
-      req.log.error(
-        { err: rereadError ?? error },
-        "Error reloading shared challenge session",
-      );
+      req.log.error({ err: rereadError ?? error }, "Error reloading shared challenge session");
     }
 
     if (error?.code === "23505" && challengeType === "daily" && isOfficial) {
@@ -452,10 +426,7 @@ router.post("/game/start", async (req, res) => {
           alreadyCompleted: existing.completed,
         });
       }
-      req.log.error(
-        { err: rereadError ?? error },
-        "Error reloading Daily session",
-      );
+      req.log.error({ err: rereadError ?? error }, "Error reloading Daily session");
     }
 
     if (error || !session) {
@@ -563,16 +534,14 @@ router.post("/game/navigate", async (req, res) => {
     const { data: session } = await admin
       .from("game_sessions")
       .select(
-        "id, user_id, challenge_type, is_official, challenge_id, friend_challenge_id, end_article, path, clicks, completed",
+        "id, user_id, challenge_type, is_official, challenge_id, friend_challenge_id, end_article, path, clicks, completed"
       )
       .eq("id", sessionId)
       .single();
 
     if (!session) return res.status(404).json({ error: "Session not found" });
-    if (session.user_id !== user.id)
-      return res.status(403).json({ error: "Forbidden" });
-    if (session.completed)
-      return res.status(409).json({ error: "Game already completed" });
+    if (session.user_id !== user.id) return res.status(403).json({ error: "Forbidden" });
+    if (session.completed) return res.status(409).json({ error: "Game already completed" });
 
     const { error: timingError } = await admin.rpc("transition_game_timing", {
       p_session_id: sessionId,
@@ -610,9 +579,7 @@ router.post("/game/navigate", async (req, res) => {
 
     if (back) {
       if (path.length <= 1) {
-        return res
-          .status(400)
-          .json({ error: "Invalid move", reason: "already at the start" });
+        return res.status(400).json({ error: "Invalid move", reason: "already at the start" });
       }
       newPath = path.slice(0, -1);
       destination = newPath[newPath.length - 1];
@@ -623,10 +590,7 @@ router.post("/game/navigate", async (req, res) => {
         links = await fetchArticleLinks(currentArticle);
       } catch (err) {
         if (isWikipediaVerificationFailure(err)) {
-          req.log.warn(
-            { err, currentArticle, destination },
-            "Wikipedia move verification failed",
-          );
+          req.log.warn({ err, currentArticle, destination }, "Wikipedia move verification failed");
           return res.status(503).json({
             error: "Couldn't verify that move",
             reason: "Wikipedia didn't answer — try that link again.",
@@ -640,9 +604,7 @@ router.post("/game/navigate", async (req, res) => {
         fromArticleLinks: links,
       });
       if (!verdict.valid) {
-        return res
-          .status(400)
-          .json({ error: "Invalid move", reason: verdict.reason });
+        return res.status(400).json({ error: "Invalid move", reason: verdict.reason });
       }
       newPath = [...path, destination];
     }
@@ -651,9 +613,7 @@ router.post("/game/navigate", async (req, res) => {
       challenge_id: session.challenge_id,
       friend_challenge_id: session.friend_challenge_id,
     });
-    const won =
-      !back &&
-      titleMatchesTarget(destination, session.end_article, endArticleAliases);
+    const won = !back && titleMatchesTarget(destination, session.end_article, endArticleAliases);
 
     // The database locks the session, rejects a concurrent completion, and
     // records the audit row plus session update in one transaction.
@@ -715,8 +675,7 @@ router.post("/game/complete", async (req, res) => {
       .single();
 
     if (!session) return res.status(404).json({ error: "Session not found" });
-    if (session.user_id !== user.id)
-      return res.status(403).json({ error: "Forbidden" });
+    if (session.user_id !== user.id) return res.status(403).json({ error: "Forbidden" });
 
     const returnStoredCompletion = async (storedSession: typeof session) => {
       const { data: stats } = await admin
@@ -733,9 +692,7 @@ router.post("/game/complete", async (req, res) => {
         won: storedSession.won,
         clicks: storedSession.clicks,
         timeSeconds: storedSession.time_seconds ?? 0,
-        path: (storedSession.turn_path ?? storedSession.path ?? []).map(
-          toDisplayTitle,
-        ),
+        path: (storedSession.turn_path ?? storedSession.path ?? []).map(toDisplayTitle),
         endArticle: toDisplayTitle(storedSession.end_article),
         streak: stats
           ? {
@@ -754,7 +711,7 @@ router.post("/game/complete", async (req, res) => {
         p_session_id: sessionId,
         p_user_id: user.id,
         p_gave_up: Boolean(gaveUp),
-      },
+      }
     );
     const completion = completionRows?.[0];
     const completedSession = completion?.session;
@@ -767,16 +724,12 @@ router.post("/game/complete", async (req, res) => {
     }
 
     const won = Boolean(completedSession.won);
-    const activeTimeMs = Math.max(
-      0,
-      Number(completedSession.active_time_ms ?? 0),
-    );
+    const activeTimeMs = Math.max(0, Number(completedSession.active_time_ms ?? 0));
     const timeSeconds = Math.max(
       0,
-      Number(completedSession.time_seconds ?? Math.round(activeTimeMs / 1000)),
+      Number(completedSession.time_seconds ?? Math.round(activeTimeMs / 1000))
     );
-    const path: string[] =
-      completedSession.turn_path ?? completedSession.path ?? [];
+    const path: string[] = completedSession.turn_path ?? completedSession.path ?? [];
     const streakInfo = completion.streak ?? null;
 
     const context = await loadCompletionResultContext({
@@ -813,8 +766,7 @@ router.get("/game/session/:id", async (req, res) => {
       .maybeSingle();
 
     if (!session) return res.status(404).json({ error: "Session not found" });
-    if (session.user_id !== user.id)
-      return res.status(403).json({ error: "Forbidden" });
+    if (session.user_id !== user.id) return res.status(403).json({ error: "Forbidden" });
 
     return res.json({ session: await sessionJsonWithMetadata(admin, session) });
   } catch (err) {

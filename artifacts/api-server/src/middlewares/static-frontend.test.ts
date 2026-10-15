@@ -38,11 +38,9 @@ class MockSocket extends Duplex {
   _write(
     chunk: Buffer | string,
     encoding: BufferEncoding,
-    callback: (error?: Error | null) => void,
+    callback: (error?: Error | null) => void
   ) {
-    this.chunks.push(
-      Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk, encoding),
-    );
+    this.chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk, encoding));
     callback();
   }
 }
@@ -80,10 +78,7 @@ async function request(app: Express, url: string): Promise<MockResponse> {
       continue;
     }
 
-    headers.append(
-      header.slice(0, separatorIndex),
-      header.slice(separatorIndex + 1).trim(),
-    );
+    headers.append(header.slice(0, separatorIndex), header.slice(separatorIndex + 1).trim());
   }
 
   return { status, headers, body };
@@ -99,27 +94,21 @@ describe("static frontend middleware", () => {
     await mkdir(assetsDir);
     await writeFile(
       path.join(staticDir, "index.html"),
-      '<!doctype html><title>WikiRace</title><main id="root"></main>',
+      '<!doctype html><title>WikiRace</title><main id="root"></main>'
     );
-    await writeFile(
-      path.join(assetsDir, "app.abc123.js"),
-      "console.log('asset');\n",
-    );
+    await writeFile(path.join(assetsDir, "app.abc123.js"), "console.log('asset');\n");
 
     app = createApp({ serveStaticDir: staticDir });
   });
 
   it("ships the social card at the metadata path and dimensions", async () => {
     const socialCard = await readFile(
-      path.resolve(
-        import.meta.dirname,
-        "../../../web/public/wikirace-share-card.jpg",
-      ),
+      path.resolve(import.meta.dirname, "../../../web/public/wikirace-share-card.jpg")
     );
 
     expect(jpegDimensions(socialCard)).toEqual({ width: 1200, height: 630 });
     expect(createHash("sha256").update(socialCard).digest("hex")).toBe(
-      "336de9e30c8c0331330ffe480fd300185676df3258be7becf0bc59ba7318a081",
+      "336de9e30c8c0331330ffe480fd300185676df3258be7becf0bc59ba7318a081"
     );
   });
 
@@ -137,9 +126,7 @@ describe("static frontend middleware", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/javascript");
-    expect(response.headers.get("cache-control")).toBe(
-      "public, max-age=31536000, immutable",
-    );
+    expect(response.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
     expect(response.body).toContain("console.log");
   });
 
@@ -152,52 +139,45 @@ describe("static frontend middleware", () => {
     expect(response.body).toContain("<title>WikiRace</title>");
   });
 
-  it.each([
-    "/.well-known/apple-app-site-association",
-    "/apple-app-site-association",
-  ])("serves apple app site association JSON at %s", async (url) => {
-    // Placeholder Team ID; the real value comes from APPLE_TEAM_ID at runtime.
-    vi.stubEnv("APPLE_TEAM_ID", "ABCDE12345");
-    try {
-      const response = await request(app, url);
-      const payload = JSON.parse(response.body);
+  it.each(["/.well-known/apple-app-site-association", "/apple-app-site-association"])(
+    "serves apple app site association JSON at %s",
+    async (url) => {
+      // Placeholder Team ID; the real value comes from APPLE_TEAM_ID at runtime.
+      vi.stubEnv("APPLE_TEAM_ID", "ABCDE12345");
+      try {
+        const response = await request(app, url);
+        const payload = JSON.parse(response.body);
 
-      expect(response.status).toBe(200);
-      expect(response.headers.get("content-type")).toContain(
-        "application/json",
-      );
-      expect(response.headers.get("cache-control")).toBe(
-        "public, max-age=300",
-      );
-      expect(response.body).toContain("ABCDE12345.com.boabrams.wikirace");
-      expect(payload).toEqual({
-        applinks: {
-          apps: [],
-          details: [
-            {
-              appIDs: ["ABCDE12345.com.boabrams.wikirace"],
-              appID: "ABCDE12345.com.boabrams.wikirace",
-              components: [{ "/": "/challenge/*" }],
-              paths: ["/challenge/*"],
-            },
-          ],
-        },
-        webcredentials: {
-          apps: ["ABCDE12345.com.boabrams.wikirace"],
-        },
-      });
-    } finally {
-      vi.unstubAllEnvs();
+        expect(response.status).toBe(200);
+        expect(response.headers.get("content-type")).toContain("application/json");
+        expect(response.headers.get("cache-control")).toBe("public, max-age=300");
+        expect(response.body).toContain("ABCDE12345.com.boabrams.wikirace");
+        expect(payload).toEqual({
+          applinks: {
+            apps: [],
+            details: [
+              {
+                appIDs: ["ABCDE12345.com.boabrams.wikirace"],
+                appID: "ABCDE12345.com.boabrams.wikirace",
+                components: [{ "/": "/challenge/*" }],
+                paths: ["/challenge/*"],
+              },
+            ],
+          },
+          webcredentials: {
+            apps: ["ABCDE12345.com.boabrams.wikirace"],
+          },
+        });
+      } finally {
+        vi.unstubAllEnvs();
+      }
     }
-  });
+  );
 
   it("serves an app-less apple app site association when APPLE_TEAM_ID is unset", async () => {
     vi.stubEnv("APPLE_TEAM_ID", "");
     try {
-      const response = await request(
-        app,
-        "/.well-known/apple-app-site-association",
-      );
+      const response = await request(app, "/.well-known/apple-app-site-association");
 
       expect(response.status).toBe(200);
       expect(JSON.parse(response.body)).toEqual({
@@ -213,7 +193,7 @@ describe("static frontend middleware", () => {
     const staticDir = await mkdtemp(path.join(tmpdir(), "wikipath-preview-"));
     await writeFile(
       path.join(staticDir, "index.html"),
-      '<!doctype html><html><head><title>WikiRace</title><meta property="og:title" content="WikiRace" /><meta property="og:description" content="Play WikiRace" /></head><body><main id="root"></main></body></html>',
+      '<!doctype html><html><head><title>WikiRace</title><meta property="og:title" content="WikiRace" /><meta property="og:description" content="Play WikiRace" /></head><body><main id="root"></main></body></html>'
     );
     const loadChallengePreview = vi.fn(async () => ({
       code: "abc123def4",
@@ -230,32 +210,32 @@ describe("static frontend middleware", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe(
-      "public, max-age=300, stale-while-revalidate=86400",
+      "public, max-age=300, stale-while-revalidate=86400"
     );
     expect(cachedResponse.status).toBe(200);
     expect(response.body).toContain(
-      "<title>Pizza &amp; Pasta → Italy &quot;Today&quot; | WikiRace</title>",
+      "<title>Pizza &amp; Pasta → Italy &quot;Today&quot; | WikiRace</title>"
     );
     expect(response.body).toContain(
-      'property="og:title" content="Pizza &amp; Pasta → Italy &quot;Today&quot; | WikiRace"',
+      'property="og:title" content="Pizza &amp; Pasta → Italy &quot;Today&quot; | WikiRace"'
     );
     expect(response.body).toContain(
-      'property="og:description" content="Can you find the path from Pizza &amp; Pasta to Italy &quot;Today&quot;?"',
+      'property="og:description" content="Can you find the path from Pizza &amp; Pasta to Italy &quot;Today&quot;?"'
     );
     expect(response.body).toContain(
-      'property="og:url" content="https://wikirace.example.com/challenge/abc123def4"',
+      'property="og:url" content="https://wikirace.example.com/challenge/abc123def4"'
     );
     expect(response.body).toContain(
-      'property="og:image" content="https://wikirace.example.com/wikirace-share-card.jpg"',
+      'property="og:image" content="https://wikirace.example.com/wikirace-share-card.jpg"'
     );
     expect(response.body).toContain(
-      'name="twitter:title" content="Pizza &amp; Pasta → Italy &quot;Today&quot; | WikiRace"',
+      'name="twitter:title" content="Pizza &amp; Pasta → Italy &quot;Today&quot; | WikiRace"'
     );
     expect(response.body).toContain(
-      'name="twitter:description" content="Can you find the path from Pizza &amp; Pasta to Italy &quot;Today&quot;?"',
+      'name="twitter:description" content="Can you find the path from Pizza &amp; Pasta to Italy &quot;Today&quot;?"'
     );
     expect(response.body).toContain(
-      'name="twitter:image" content="https://wikirace.example.com/wikirace-share-card.jpg"',
+      'name="twitter:image" content="https://wikirace.example.com/wikirace-share-card.jpg"'
     );
     expect(loadChallengePreview).toHaveBeenCalledWith("abc123def4");
     expect(loadChallengePreview).toHaveBeenCalledTimes(1);
@@ -265,7 +245,7 @@ describe("static frontend middleware", () => {
     const staticDir = await mkdtemp(path.join(tmpdir(), "wikipath-invalid-"));
     await writeFile(
       path.join(staticDir, "index.html"),
-      '<!doctype html><html><head><title>WikiRace</title></head><body><main id="root"></main></body></html>',
+      '<!doctype html><html><head><title>WikiRace</title></head><body><main id="root"></main></body></html>'
     );
     const loadChallengePreview = vi.fn();
     const previewApp = createApp({
@@ -287,7 +267,7 @@ describe("static frontend middleware", () => {
     await mkdir(staticDir, { recursive: true });
     await writeFile(
       path.join(staticDir, "index.html"),
-      '<!doctype html><title>Dot Root</title><main id="root"></main>',
+      '<!doctype html><title>Dot Root</title><main id="root"></main>'
     );
 
     const dotPathApp = createApp({ serveStaticDir: staticDir });

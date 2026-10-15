@@ -16,7 +16,7 @@ export function titlesMatch(a: string, b: string): boolean {
 export function titleMatchesTarget(
   candidate: string,
   target: string,
-  aliases?: readonly string[] | null,
+  aliases?: readonly string[] | null
 ): boolean {
   if (titlesMatch(candidate, target)) return true;
   if (!aliases?.length) return false;

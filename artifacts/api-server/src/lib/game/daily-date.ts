@@ -14,9 +14,7 @@ export function localDateForTimeZone(now: Date, timeZone: string): string {
       month: "2-digit",
       day: "2-digit",
     }).formatToParts(now);
-    const value = Object.fromEntries(
-      parts.map((part) => [part.type, part.value]),
-    );
+    const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
     if (!value.year || !value.month || !value.day) throw new Error();
     return `${value.year}-${value.month}-${value.day}`;
   } catch {

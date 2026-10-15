@@ -37,9 +37,7 @@ router.get("/friends", async (req, res) => {
     }
 
     const otherIds = [
-      ...new Set(
-        (friendships ?? []).map((f) => (f.user_id === user.id ? f.friend_id : f.user_id)),
-      ),
+      ...new Set((friendships ?? []).map((f) => (f.user_id === user.id ? f.friend_id : f.user_id))),
     ];
     const profilesById = new Map<string, any>();
     if (otherIds.length > 0) {
@@ -83,7 +81,9 @@ router.post("/friends/request", async (req, res) => {
     const user = await getRequestUser(req);
     if (!user) return res.status(401).json({ error: "Unauthorized" });
 
-    const rawCode = String(req.body?.friendCode ?? "").trim().toUpperCase();
+    const rawCode = String(req.body?.friendCode ?? "")
+      .trim()
+      .toUpperCase();
     if (!rawCode) return res.status(400).json({ error: "friendCode is required" });
 
     const admin = createServiceClient();
@@ -101,7 +101,7 @@ router.post("/friends/request", async (req, res) => {
       .from("friendships")
       .select("*")
       .or(
-        `and(user_id.eq.${user.id},friend_id.eq.${other.id}),and(user_id.eq.${other.id},friend_id.eq.${user.id})`,
+        `and(user_id.eq.${user.id},friend_id.eq.${other.id}),and(user_id.eq.${other.id},friend_id.eq.${user.id})`
       )
       .maybeSingle();
 

@@ -1,10 +1,6 @@
 import { Router } from "express";
 import { attachFinisherPaths, callerCompletedDailyRace } from "../lib/game/path-reveal";
-import {
-  createServiceClient,
-  createSupabaseClient,
-  getRequestUser,
-} from "../lib/supabase";
+import { createServiceClient, createSupabaseClient, getRequestUser } from "../lib/supabase";
 import { parseBoard } from "../lib/game/leaderboard";
 
 const router = Router();
@@ -49,9 +45,7 @@ router.get("/leaderboard/daily", async (req, res) => {
     const user = await getRequestUser(req);
     const admin = createServiceClient();
     const revealPaths =
-      user && challengeId
-        ? await callerCompletedDailyRace(admin, user.id, challengeId)
-        : false;
+      user && challengeId ? await callerCompletedDailyRace(admin, user.id, challengeId) : false;
     const leaderboard = revealPaths
       ? await attachFinisherPaths(
           admin,
@@ -61,7 +55,7 @@ router.get("/leaderboard/daily", async (req, res) => {
             completed_at: string | null;
             time_seconds: number;
             user_id: string;
-          }>,
+          }>
         )
       : (data ?? []);
 

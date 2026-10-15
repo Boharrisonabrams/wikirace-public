@@ -42,6 +42,6 @@ export function mountAppleAppSiteAssociation(app: Express) {
         .setHeader("Cache-Control", APPLE_APP_SITE_ASSOCIATION_CACHE)
         .type("application/json")
         .send(buildAppleAppSiteAssociationPayload(getAppleTeamId()));
-    },
+    }
   );
 }

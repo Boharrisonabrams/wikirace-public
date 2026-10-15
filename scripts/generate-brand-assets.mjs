@@ -26,18 +26,11 @@ async function transparentMonogram(size, monochrome = false) {
     .toBuffer({ resolveWithObject: true });
   const rgba = Buffer.alloc(info.width * info.height * 4);
 
-  for (
-    let input = 0, output = 0;
-    input < data.length;
-    input += 3, output += 4
-  ) {
+  for (let input = 0, output = 0; input < data.length; input += 3, output += 4) {
     const red = data[input] ?? 0;
     const green = data[input + 1] ?? 0;
     const blue = data[input + 2] ?? 0;
-    const alpha = Math.max(
-      0,
-      Math.min(255, Math.round((red - Math.max(green, blue) - 8) * 5)),
-    );
+    const alpha = Math.max(0, Math.min(255, Math.round((red - Math.max(green, blue) - 8) * 5)));
     rgba[output] = monochrome ? 255 : red;
     rgba[output + 1] = monochrome ? 255 : green;
     rgba[output + 2] = monochrome ? 255 : blue;
@@ -63,18 +56,16 @@ await Promise.all([
     .png({ compressionLevel: 9 })
     .toFile(path.join(mobile, "android-icon-background.png")),
   transparentMonogram(512).then((image) =>
-    image.toFile(path.join(mobile, "android-icon-foreground.png")),
+    image.toFile(path.join(mobile, "android-icon-foreground.png"))
   ),
   transparentMonogram(432, true).then((image) =>
-    image.toFile(path.join(mobile, "android-icon-monochrome.png")),
+    image.toFile(path.join(mobile, "android-icon-monochrome.png"))
   ),
 ]);
 
-const socialMonogram = await transparentMonogram(520).then((image) =>
-  image.toBuffer(),
-);
+const socialMonogram = await transparentMonogram(520).then((image) => image.toBuffer());
 const border = Buffer.from(
-  '<svg width="1200" height="630"><rect x="22" y="22" width="1156" height="586" rx="8" fill="none" stroke="#c94f2f" stroke-width="2"/></svg>',
+  '<svg width="1200" height="630"><rect x="22" y="22" width="1156" height="586" rx="8" fill="none" stroke="#c94f2f" stroke-width="2"/></svg>'
 );
 await sharp({
   create: { background: cream, channels: 3, height: 630, width: 1200 },

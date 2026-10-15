@@ -76,9 +76,7 @@ describe("GET /api/daily time zone compatibility", () => {
   });
 
   it("still rejects an invalid supplied time zone", async () => {
-    const response = await getDaily(
-      "/api/daily?timeZone=Definitely%2FNot_A_Time_Zone",
-    );
+    const response = await getDaily("/api/daily?timeZone=Definitely%2FNot_A_Time_Zone");
 
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toEqual({
@@ -90,15 +88,13 @@ describe("GET /api/daily time zone compatibility", () => {
   it.each(["+23:59", "-23:59"])(
     "rejects numeric offset %s before database access",
     async (timeZone) => {
-      const response = await getDaily(
-        `/api/daily?timeZone=${encodeURIComponent(timeZone)}`,
-      );
+      const response = await getDaily(`/api/daily?timeZone=${encodeURIComponent(timeZone)}`);
 
       expect(response.status).toBe(400);
       await expect(response.json()).resolves.toEqual({
         error: "Invalid time zone",
       });
       expect(supabaseMocks.from).not.toHaveBeenCalled();
-    },
+    }
   );
 });

@@ -10,18 +10,10 @@ import {
 
 describe("article Back rules", () => {
   it("rejects Back only for an official Daily race", () => {
-    expect(
-      allowsArticleBack({ challengeType: "daily", isOfficial: true }),
-    ).toBe(false);
-    expect(
-      allowsArticleBack({ challengeType: "daily", isOfficial: false }),
-    ).toBe(true);
-    expect(
-      allowsArticleBack({ challengeType: "practice", isOfficial: true }),
-    ).toBe(true);
-    expect(
-      allowsArticleBack({ challengeType: "friend", isOfficial: true }),
-    ).toBe(true);
+    expect(allowsArticleBack({ challengeType: "daily", isOfficial: true })).toBe(false);
+    expect(allowsArticleBack({ challengeType: "daily", isOfficial: false })).toBe(true);
+    expect(allowsArticleBack({ challengeType: "practice", isOfficial: true })).toBe(true);
+    expect(allowsArticleBack({ challengeType: "friend", isOfficial: true })).toBe(true);
   });
 });
 
@@ -39,9 +31,9 @@ describe("parseStartMode", () => {
   });
 
   it("rejects replay outside Daily", () => {
-    expect(() =>
-      parseStartMode({ challengeType: "practice", replay: true }),
-    ).toThrow("Replay is daily-only");
+    expect(() => parseStartMode({ challengeType: "practice", replay: true })).toThrow(
+      "Replay is daily-only"
+    );
   });
 });
 
@@ -51,40 +43,40 @@ describe("declaredSearchTier", () => {
       declaredSearchTier({
         challengeType: "daily",
         isOfficial: true,
-      }),
+      })
     ).toBe("palette");
     expect(
       declaredSearchTier({
         challengeType: "practice",
         isOfficial: true,
-      }),
+      })
     ).toBe("palette");
     expect(
       declaredSearchTier({
         challengeType: "friend",
         isOfficial: true,
         friendSearchTier: null,
-      }),
+      })
     ).toBe("palette");
     expect(
       declaredSearchTier({
         challengeType: "friend",
         isOfficial: true,
         friendSearchTier: "palette",
-      }),
+      })
     ).toBe("palette");
     expect(
       declaredSearchTier({
         challengeType: "friend",
         isOfficial: true,
         friendSearchTier: "find",
-      }),
+      })
     ).toBe("palette");
     expect(
       declaredSearchTier({
         challengeType: "daily",
         isOfficial: false,
-      }),
+      })
     ).toBe("palette");
   });
 
@@ -93,49 +85,47 @@ describe("declaredSearchTier", () => {
       deriveDeclaredSearchTier({
         challengeType: "daily",
         isOfficial: true,
-      }),
+      })
     ).toBe("find");
     expect(
       deriveDeclaredSearchTier({
         challengeType: "practice",
         isOfficial: true,
-      }),
+      })
     ).toBe("palette");
     expect(
       deriveDeclaredSearchTier({
         challengeType: "friend",
         isOfficial: true,
         friendSearchTier: null,
-      }),
+      })
     ).toBeUndefined();
     expect(
       deriveDeclaredSearchTier({
         challengeType: "friend",
         isOfficial: true,
         friendSearchTier: "palette",
-      }),
+      })
     ).toBe("palette");
     expect(
       deriveDeclaredSearchTier({
         challengeType: "friend",
         isOfficial: true,
         friendSearchTier: "find",
-      }),
+      })
     ).toBe("find");
     expect(
       deriveDeclaredSearchTier({
         challengeType: "daily",
         isOfficial: false,
-      }),
+      })
     ).toBe("palette");
   });
 
   it("defaults a requested friend challenge tier to find-only", () => {
     expect(parseRequestedSearchTier(undefined)).toBe("find");
     expect(parseRequestedSearchTier("palette")).toBe("palette");
-    expect(() => parseRequestedSearchTier("invalid")).toThrow(
-      "Invalid searchTier",
-    );
+    expect(() => parseRequestedSearchTier("invalid")).toThrow("Invalid searchTier");
   });
 });
 

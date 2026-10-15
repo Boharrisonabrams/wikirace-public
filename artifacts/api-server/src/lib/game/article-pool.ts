@@ -63,10 +63,7 @@ const DISCOVERY_TITLES = new Set([
   "Lighthouse",
 ]);
 
-function articleGroup(
-  topic: ArticleTopic,
-  titles: string[],
-): ArticleCandidate[] {
+function articleGroup(topic: ArticleTopic, titles: string[]): ArticleCandidate[] {
   return titles.map((title) => ({
     title,
     topic,
@@ -345,9 +342,7 @@ export const ARTICLE_CANDIDATES: ArticleCandidate[] = [
   ]),
 ];
 
-export const ARTICLE_POOL: string[] = ARTICLE_CANDIDATES.map(
-  ({ title }) => title,
-);
+export const ARTICLE_POOL: string[] = ARTICLE_CANDIDATES.map(({ title }) => title);
 
 /** FNV-1a hash — deterministic across processes (no Math.random). */
 function fnv1a(str: string): number {
@@ -377,10 +372,7 @@ const CLOSELY_RELATED_TOPICS = new Set([
 function dayNumberForDate(isoDate: string): number {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) throw new Error("Invalid ISO date");
   const timestamp = Date.parse(`${isoDate}T00:00:00.000Z`);
-  if (
-    !Number.isFinite(timestamp) ||
-    new Date(timestamp).toISOString().slice(0, 10) !== isoDate
-  ) {
+  if (!Number.isFinite(timestamp) || new Date(timestamp).toISOString().slice(0, 10) !== isoDate) {
     throw new Error("Invalid ISO date");
   }
   return Math.floor(timestamp / 86_400_000);
@@ -393,7 +385,7 @@ function dateForDayNumber(dayNumber: number): string {
 function chooseCandidate(
   candidates: ArticleCandidate[],
   salt: string,
-  excludedTitles: Set<string>,
+  excludedTitles: Set<string>
 ): ArticleCandidate {
   const startIndex = fnv1a(salt) % candidates.length;
   for (let offset = 0; offset < candidates.length; offset++) {
@@ -403,10 +395,7 @@ function chooseCandidate(
   throw new Error("Article catalogue exhausted");
 }
 
-function difficultyFor(
-  start: ArticleCandidate,
-  end: ArticleCandidate,
-): Difficulty {
+function difficultyFor(start: ArticleCandidate, end: ArticleCandidate): Difficulty {
   if (end.recognition === "discovery") return "hard";
   const topicKey = [start.topic, end.topic].sort().join(":");
   return CLOSELY_RELATED_TOPICS.has(topicKey) ? "easy" : "medium";
@@ -415,25 +404,19 @@ function difficultyFor(
 function generatePair(isoDate: string, recentlyUsed: Set<string>): DailyPair {
   const seed = `wikipath-v${GENERATOR_VERSION}:${isoDate}`;
   const familiarCandidates = ARTICLE_CANDIDATES.filter(
-    ({ recognition }) => recognition === "familiar",
+    ({ recognition }) => recognition === "familiar"
   );
-  const start = chooseCandidate(
-    familiarCandidates,
-    `${seed}:start`,
-    recentlyUsed,
-  );
+  const start = chooseCandidate(familiarCandidates, `${seed}:start`, recentlyUsed);
 
   const endRecognition: Recognition =
     fnv1a(`${seed}:recognition`) % 3 === 0 ? "discovery" : "familiar";
   const endCandidates = ARTICLE_CANDIDATES.filter(
-    (candidate) =>
-      candidate.topic !== start.topic &&
-      candidate.recognition === endRecognition,
+    (candidate) => candidate.topic !== start.topic && candidate.recognition === endRecognition
   );
   const end = chooseCandidate(
     endCandidates,
     `${seed}:end`,
-    new Set([...recentlyUsed, start.title]),
+    new Set([...recentlyUsed, start.title])
   );
 
   return {

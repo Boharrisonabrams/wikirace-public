@@ -38,25 +38,20 @@ type SearchTierSession = {
   friendSearchTier?: unknown;
 };
 
-export function deriveDeclaredSearchTier(
-  session: SearchTierSession,
-): SearchTier | undefined {
+export function deriveDeclaredSearchTier(session: SearchTierSession): SearchTier | undefined {
   if (session.challengeType === "friend") {
     return parseStoredSearchTier(session.friendSearchTier) ?? undefined;
   }
-  return session.challengeType === "daily" && session.isOfficial
-    ? "find"
-    : "palette";
+  return session.challengeType === "daily" && session.isOfficial ? "find" : "palette";
 }
 
 export function declaredSearchTier(session: SearchTierSession): SearchTier {
-  return SEARCH_TIER_HOLD ? "palette" : deriveDeclaredSearchTier(session) ?? "palette";
+  return SEARCH_TIER_HOLD ? "palette" : (deriveDeclaredSearchTier(session) ?? "palette");
 }
 
-export function parseStartMode({
-  challengeType,
-  replay = false,
-}: StartModeInput): { isOfficial: boolean } {
+export function parseStartMode({ challengeType, replay = false }: StartModeInput): {
+  isOfficial: boolean;
+} {
   if (replay && challengeType !== "daily") {
     throw new Error("Replay is daily-only");
   }

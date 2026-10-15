@@ -86,17 +86,14 @@ describe("POST /api/game/complete navigation race", () => {
     const server = createApp().listen(0);
     try {
       const address = server.address() as AddressInfo;
-      const response = await fetch(
-        `http://127.0.0.1:${address.port}/api/game/complete`,
-        {
-          method: "POST",
-          headers: {
-            authorization: "Bearer local-test-token",
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({ sessionId, gaveUp: false }),
+      const response = await fetch(`http://127.0.0.1:${address.port}/api/game/complete`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer local-test-token",
+          "content-type": "application/json",
         },
-      );
+        body: JSON.stringify({ sessionId, gaveUp: false }),
+      });
 
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toMatchObject({

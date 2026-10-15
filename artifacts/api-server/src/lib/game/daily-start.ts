@@ -21,10 +21,7 @@ type ReplayInsertOptions<T, E extends DatabaseError> = {
   maxAttempts?: number;
 };
 
-export function assertDailyChallengeDate(
-  challengeDate: string,
-  localDate: string,
-): void {
+export function assertDailyChallengeDate(challengeDate: string, localDate: string): void {
   if (challengeDate !== localDate) {
     throw new Error(DAILY_CHALLENGE_DATE_CONFLICT);
   }

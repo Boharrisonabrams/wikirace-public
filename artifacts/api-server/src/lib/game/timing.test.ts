@@ -20,8 +20,7 @@ vi.mock("../supabase", () => ({
 import { createApp } from "../../app";
 import { applyTimingTransition } from "./timing";
 
-const UUID_PATTERN_FOR_TEST =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_PATTERN_FOR_TEST = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 afterEach(() => {
   vi.useRealTimers();
@@ -194,31 +193,19 @@ function arrangeOfficialDailyCompletion({
 describe("applyTimingTransition", () => {
   it("starts an inactive timer without accumulating time", () => {
     expect(
-      applyTimingTransition(
-        { activeTimeMs: 0, activeStartedAt: null },
-        "resume",
-        1_000,
-      ),
+      applyTimingTransition({ activeTimeMs: 0, activeStartedAt: null }, "resume", 1_000)
     ).toEqual({ activeTimeMs: 0, activeStartedAt: 1_000 });
   });
 
   it("checkpoints active time on heartbeat", () => {
     expect(
-      applyTimingTransition(
-        { activeTimeMs: 0, activeStartedAt: 1_000 },
-        "heartbeat",
-        16_000,
-      ),
+      applyTimingTransition({ activeTimeMs: 0, activeStartedAt: 1_000 }, "heartbeat", 16_000)
     ).toEqual({ activeTimeMs: 15_000, activeStartedAt: 16_000 });
   });
 
   it("closes the active interval on pause", () => {
     expect(
-      applyTimingTransition(
-        { activeTimeMs: 15_000, activeStartedAt: 16_000 },
-        "pause",
-        20_000,
-      ),
+      applyTimingTransition({ activeTimeMs: 15_000, activeStartedAt: 16_000 }, "pause", 20_000)
     ).toEqual({ activeTimeMs: 19_000, activeStartedAt: null });
   });
 
@@ -245,11 +232,7 @@ describe("applyTimingTransition", () => {
 
   it("caps a delayed heartbeat to exclude unattended time", () => {
     expect(
-      applyTimingTransition(
-        { activeTimeMs: 0, activeStartedAt: 1_000 },
-        "heartbeat",
-        61_000,
-      ),
+      applyTimingTransition({ activeTimeMs: 0, activeStartedAt: 1_000 }, "heartbeat", 61_000)
     ).toEqual({ activeTimeMs: 15_000, activeStartedAt: 61_000 });
   });
 });
@@ -347,9 +330,7 @@ describe("POST /api/game/timing", () => {
       timingActive: false,
     });
     expect(supabaseMocks.rpc).toHaveBeenCalledTimes(2);
-    expect(supabaseMocks.rpc.mock.calls[0]?.[1]).toEqual(
-      supabaseMocks.rpc.mock.calls[1]?.[1],
-    );
+    expect(supabaseMocks.rpc.mock.calls[0]?.[1]).toEqual(supabaseMocks.rpc.mock.calls[1]?.[1]);
   });
 
   it("rejects an unsupported timing action before database access", async () => {
@@ -529,7 +510,7 @@ describe("POST /api/game/navigate timing", () => {
         p_user_id: "00000000-0000-0000-0000-000000000001",
         p_action: "pause",
         p_event_id: expect.stringMatching(UUID_PATTERN_FOR_TEST),
-      }),
+      })
     );
   });
 });
@@ -621,7 +602,7 @@ describe("POST /api/game/complete timing", () => {
       expect.objectContaining({
         p_session_id: sessionId,
         p_gave_up: false,
-      }),
+      })
     );
     expect(statsUpsert.upsert).not.toHaveBeenCalled();
   });
@@ -710,13 +691,12 @@ describe("POST /api/game/complete timing", () => {
   it("uses the stored time zone and local date across the UTC boundary", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-10T10:30:00.000Z"));
-    const { challengeId, challengeQuery, sessionId, statsUpsert } =
-      arrangeOfficialDailyCompletion({
-        challengeDate: "2026-07-11",
-        localDate: "2026-07-11",
-        previousDailyDate: "2026-07-10",
-        timeZone: "Pacific/Kiritimati",
-      });
+    const { challengeId, challengeQuery, sessionId, statsUpsert } = arrangeOfficialDailyCompletion({
+      challengeDate: "2026-07-11",
+      localDate: "2026-07-11",
+      previousDailyDate: "2026-07-10",
+      timeZone: "Pacific/Kiritimati",
+    });
 
     const response = await postApi("/game/complete", { sessionId });
 
@@ -778,12 +758,10 @@ describe("POST /api/game/complete timing", () => {
       expect.objectContaining({
         p_challenge_id: challengeId,
         p_user_id: "00000000-0000-0000-0000-000000000001",
-      }),
+      })
     );
     expect(
-      supabaseMocks.rpc.mock.calls.filter(
-        ([name]) => name === "get_daily_player_ranks",
-      ),
+      supabaseMocks.rpc.mock.calls.filter(([name]) => name === "get_daily_player_ranks")
     ).toHaveLength(1);
   });
 

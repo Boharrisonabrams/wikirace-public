@@ -2,14 +2,12 @@ import sanitizeHtml from "sanitize-html";
 import { normalizeTitle, toDisplayTitle } from "./game/titles";
 
 const WIKIPEDIA_API_URL = "https://en.wikipedia.org/w/api.php";
-const WIKIPEDIA_REST_SEARCH_URL =
-  "https://en.wikipedia.org/w/rest.php/v1/search/page";
+const WIKIPEDIA_REST_SEARCH_URL = "https://en.wikipedia.org/w/rest.php/v1/search/page";
 
 // Wikimedia asks API clients to identify themselves with a contact. If you run
 // your own deployment, replace this with your own project URL or address.
 const WIKI_HEADERS = {
-  "User-Agent":
-    "WikiRace/1.0 (https://github.com/Boharrisonabrams; contact: see GitHub profile)",
+  "User-Agent": "WikiRace/1.0 (https://github.com/Boharrisonabrams; contact: see GitHub profile)",
   "Api-User-Agent":
     "WikiRace/1.0 (https://github.com/Boharrisonabrams; contact: see GitHub profile)",
 };
@@ -24,7 +22,7 @@ class TtlCache<T> {
   private map = new Map<string, CacheEntry<T>>();
   constructor(
     private ttlMs: number,
-    private maxEntries: number,
+    private maxEntries: number
   ) {}
 
   get(key: string): T | undefined {
@@ -91,10 +89,7 @@ function extractLinks(pageData: any): string[] {
     pageData.links
       ?.filter((link: any) => link.ns === 0)
       .map((link: any) => link["*"])
-      .filter(
-        (link: string) =>
-          !link.startsWith("File:") && !link.startsWith("Category:"),
-      ) ?? []
+      .filter((link: string) => !link.startsWith("File:") && !link.startsWith("Category:")) ?? []
   );
 }
 
@@ -115,9 +110,7 @@ export async function fetchArticleLinks(title: string): Promise<string[]> {
   });
   if (data.error) {
     throw new WikipediaUpstreamError(
-      typeof data.error?.info === "string"
-        ? data.error.info
-        : "Wikipedia didn't answer",
+      typeof data.error?.info === "string" ? data.error.info : "Wikipedia didn't answer"
     );
   }
   const links = extractLinks(data.parse);
@@ -169,10 +162,7 @@ export async function getRandomArticle(): Promise<{
   return { title: random.title, pageid: String(random.id) };
 }
 
-export async function searchArticles(
-  query: string,
-  limit: number,
-): Promise<string[]> {
+export async function searchArticles(query: string, limit: number): Promise<string[]> {
   const data = await wikiFetch({
     action: "opensearch",
     search: query,
@@ -213,14 +203,14 @@ function plainText(value: unknown): string | null {
         "&gt;": ">",
       };
       return namedEntities[entity.toLowerCase()] ?? entity;
-    },
+    }
   );
   return text || null;
 }
 
 export async function searchWikipediaSuggestions(
   query: string,
-  limit = 6,
+  limit = 6
 ): Promise<WikipediaSuggestion[]> {
   const safeLimit = Math.min(6, Math.max(1, Math.floor(limit) || 6));
   const search = new URLSearchParams({
@@ -250,9 +240,7 @@ export async function searchWikipediaSuggestions(
   });
 }
 
-export async function fetchArticleRedirectAliases(
-  title: string,
-): Promise<string[]> {
+export async function fetchArticleRedirectAliases(title: string): Promise<string[]> {
   const cacheKey = normalizeTitle(title);
   const cached = redirectsCache.get(cacheKey);
   if (cached) return cached;
@@ -268,9 +256,7 @@ export async function fetchArticleRedirectAliases(
     const page = pages ? (Object.values(pages)[0] as any) : null;
     const aliases = Array.isArray(page?.redirects)
       ? page.redirects
-          .map((redirect: any) =>
-            typeof redirect?.title === "string" ? redirect.title : null,
-          )
+          .map((redirect: any) => (typeof redirect?.title === "string" ? redirect.title : null))
           .filter((value: string | null): value is string => value !== null)
       : [];
     redirectsCache.set(cacheKey, aliases);
@@ -281,9 +267,7 @@ export async function fetchArticleRedirectAliases(
   }
 }
 
-export async function fetchArticleDescription(
-  title: string,
-): Promise<string | null> {
+export async function fetchArticleDescription(title: string): Promise<string | null> {
   const cacheKey = normalizeTitle(title);
   const cached = descriptionCache.get(cacheKey);
   if (cached !== undefined) return cached;
@@ -316,8 +300,7 @@ export async function resolveArticle(title: string): Promise<string | null> {
   const pages = data.query?.pages;
   if (!pages) return null;
   const page = Object.values(pages)[0] as any;
-  if (!page || page.missing !== undefined || page.invalid !== undefined)
-    return null;
+  if (!page || page.missing !== undefined || page.invalid !== undefined) return null;
   return page.title as string;
 }
 
@@ -354,10 +337,7 @@ function normalizeImageSrc(src: string | undefined): string | null {
  *   plain <span> so the client cannot render an illegal clickable move
  * - images restricted to Wikimedia hosts, lazy-loaded
  */
-export function sanitizeWikipediaHtml(
-  html: string,
-  validLinks: string[],
-): string {
+export function sanitizeWikipediaHtml(html: string, validLinks: string[]): string {
   const validLinkSet = new Set(validLinks.map(normalizeTitle));
 
   return sanitizeHtml(html, {
@@ -407,15 +387,7 @@ export function sanitizeWikipediaHtml(
       "ul",
       "wbr",
     ],
-    nonTextTags: [
-      "script",
-      "style",
-      "iframe",
-      "object",
-      "embed",
-      "noscript",
-      "textarea",
-    ],
+    nonTextTags: ["script", "style", "iframe", "object", "embed", "noscript", "textarea"],
     allowedAttributes: {
       a: ["href", "class", "data-article", "title"],
       img: ["src", "alt", "width", "height", "class", "loading"],
@@ -434,11 +406,7 @@ export function sanitizeWikipediaHtml(
       if (cls.includes("noprint")) return true;
       if (cls.includes("mw-jump-link")) return true;
       if (frame.tag === "ol" && cls.includes("references")) return true;
-      if (
-        frame.tag === "div" &&
-        (cls.includes("reflist") || cls.includes("refbegin"))
-      )
-        return true;
+      if (frame.tag === "div" && (cls.includes("reflist") || cls.includes("refbegin"))) return true;
       return false;
     },
     transformTags: {

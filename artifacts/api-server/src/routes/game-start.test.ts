@@ -79,17 +79,14 @@ describe("POST /api/game/start Daily challenge date", () => {
     const server = createApp().listen(0);
     try {
       const address = server.address() as AddressInfo;
-      const response = await fetch(
-        `http://127.0.0.1:${address.port}/api/game/start`,
-        {
-          method: "POST",
-          headers: {
-            authorization: "Bearer local-test-token",
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({ challengeType: "daily", challengeId }),
+      const response = await fetch(`http://127.0.0.1:${address.port}/api/game/start`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer local-test-token",
+          "content-type": "application/json",
         },
-      );
+        body: JSON.stringify({ challengeType: "daily", challengeId }),
+      });
 
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toMatchObject({
@@ -171,17 +168,14 @@ describe("POST /api/game/start Daily challenge date", () => {
     const server = createApp().listen(0);
     try {
       const address = server.address() as AddressInfo;
-      const response = await fetch(
-        `http://127.0.0.1:${address.port}/api/game/start`,
-        {
-          method: "POST",
-          headers: {
-            authorization: "Bearer local-test-token",
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({ challengeType: "daily", challengeId }),
+      const response = await fetch(`http://127.0.0.1:${address.port}/api/game/start`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer local-test-token",
+          "content-type": "application/json",
         },
-      );
+        body: JSON.stringify({ challengeType: "daily", challengeId }),
+      });
 
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toMatchObject({
@@ -195,7 +189,7 @@ describe("POST /api/game/start Daily challenge date", () => {
         expect.objectContaining({
           local_date: localDate,
           timezone_at_start: "UTC",
-        }),
+        })
       );
       expect(queries).toHaveLength(0);
     } finally {
@@ -289,29 +283,26 @@ describe("POST /api/game/start Daily challenge date", () => {
     const server = createApp().listen(0);
     try {
       const address = server.address() as AddressInfo;
-      const response = await fetch(
-        `http://127.0.0.1:${address.port}/api/game/start`,
-        {
-          method: "POST",
-          headers: {
-            authorization: "Bearer local-test-token",
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            challengeType: "daily",
-            challengeId,
-            friendChallengeId: "daily12345",
-            timeZone: "UTC",
-          }),
+      const response = await fetch(`http://127.0.0.1:${address.port}/api/game/start`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer local-test-token",
+          "content-type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          challengeType: "daily",
+          challengeId,
+          friendChallengeId: "daily12345",
+          timeZone: "UTC",
+        }),
+      });
 
       expect(response.status).toBe(200);
       expect(insertQuery.insert).toHaveBeenCalledWith(
         expect.objectContaining({
           challenge_id: challengeId,
           friend_challenge_id: sharedChallengeId,
-        }),
+        })
       );
       expect(queries).toHaveLength(0);
     } finally {
@@ -363,22 +354,19 @@ describe("POST /api/game/start Daily challenge date", () => {
     const server = createApp().listen(0);
     try {
       const address = server.address() as AddressInfo;
-      const response = await fetch(
-        `http://127.0.0.1:${address.port}/api/game/start`,
-        {
-          method: "POST",
-          headers: {
-            authorization: "Bearer local-test-token",
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            challengeType: "daily",
-            challengeId,
-            friendChallengeId: "wrongdaily",
-            timeZone: "UTC",
-          }),
+      const response = await fetch(`http://127.0.0.1:${address.port}/api/game/start`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer local-test-token",
+          "content-type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          challengeType: "daily",
+          challengeId,
+          friendChallengeId: "wrongdaily",
+          timeZone: "UTC",
+        }),
+      });
 
       expect(response.status).toBe(400);
       await expect(response.json()).resolves.toEqual({
@@ -396,21 +384,18 @@ describe("POST /api/game/start Daily challenge date", () => {
     const server = createApp().listen(0);
     try {
       const address = server.address() as AddressInfo;
-      const response = await fetch(
-        `http://127.0.0.1:${address.port}/api/game/start`,
-        {
-          method: "POST",
-          headers: {
-            authorization: "Bearer local-test-token",
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            challengeType: "daily",
-            challengeId: "00000000-0000-0000-0000-000000000002",
-            timeZone: "Definitely/Not_A_Time_Zone",
-          }),
+      const response = await fetch(`http://127.0.0.1:${address.port}/api/game/start`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer local-test-token",
+          "content-type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          challengeType: "daily",
+          challengeId: "00000000-0000-0000-0000-000000000002",
+          timeZone: "Definitely/Not_A_Time_Zone",
+        }),
+      });
 
       expect(response.status).toBe(400);
       await expect(response.json()).resolves.toEqual({
@@ -430,21 +415,18 @@ describe("POST /api/game/start Daily challenge date", () => {
       const server = createApp().listen(0);
       try {
         const address = server.address() as AddressInfo;
-        const response = await fetch(
-          `http://127.0.0.1:${address.port}/api/game/start`,
-          {
-            method: "POST",
-            headers: {
-              authorization: "Bearer local-test-token",
-              "content-type": "application/json",
-            },
-            body: JSON.stringify({
-              challengeType: "daily",
-              challengeId: "00000000-0000-0000-0000-000000000002",
-              timeZone,
-            }),
+        const response = await fetch(`http://127.0.0.1:${address.port}/api/game/start`, {
+          method: "POST",
+          headers: {
+            authorization: "Bearer local-test-token",
+            "content-type": "application/json",
           },
-        );
+          body: JSON.stringify({
+            challengeType: "daily",
+            challengeId: "00000000-0000-0000-0000-000000000002",
+            timeZone,
+          }),
+        });
 
         expect(response.status).toBe(400);
         await expect(response.json()).resolves.toEqual({
@@ -456,7 +438,7 @@ describe("POST /api/game/start Daily challenge date", () => {
           server.close((error) => (error ? reject(error) : resolve()));
         });
       }
-    },
+    }
   );
 
   it("rejects a stale challenge before reading or creating a session", async () => {
@@ -486,21 +468,18 @@ describe("POST /api/game/start Daily challenge date", () => {
     const server = createApp().listen(0);
     try {
       const address = server.address() as AddressInfo;
-      const response = await fetch(
-        `http://127.0.0.1:${address.port}/api/game/start`,
-        {
-          method: "POST",
-          headers: {
-            authorization: "Bearer local-test-token",
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            challengeType: "daily",
-            challengeId: "00000000-0000-0000-0000-000000000002",
-            timeZone: "UTC",
-          }),
+      const response = await fetch(`http://127.0.0.1:${address.port}/api/game/start`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer local-test-token",
+          "content-type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          challengeType: "daily",
+          challengeId: "00000000-0000-0000-0000-000000000002",
+          timeZone: "UTC",
+        }),
+      });
 
       expect(response.status).toBe(409);
       await expect(response.json()).resolves.toEqual({
@@ -595,32 +574,24 @@ describe("POST /api/game/start Daily challenge date", () => {
       error: null,
     });
 
-    const queries = [
-      challengeQuery,
-      initialOfficialQuery,
-      conflictingInsert,
-      officialReread,
-    ];
+    const queries = [challengeQuery, initialOfficialQuery, conflictingInsert, officialReread];
     supabaseMocks.from.mockImplementation(() => queries.shift());
 
     const server = createApp().listen(0);
     try {
       const address = server.address() as AddressInfo;
-      const response = await fetch(
-        `http://127.0.0.1:${address.port}/api/game/start`,
-        {
-          method: "POST",
-          headers: {
-            authorization: "Bearer local-test-token",
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            challengeType: "daily",
-            challengeId,
-            timeZone: "UTC",
-          }),
+      const response = await fetch(`http://127.0.0.1:${address.port}/api/game/start`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer local-test-token",
+          "content-type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          challengeType: "daily",
+          challengeId,
+          timeZone: "UTC",
+        }),
+      });
 
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toMatchObject({
@@ -701,30 +672,24 @@ describe("POST /api/game/start Daily challenge date", () => {
     const server = createApp().listen(0);
     try {
       const address = server.address() as AddressInfo;
-      const response = await fetch(
-        `http://127.0.0.1:${address.port}/api/game/start`,
-        {
-          method: "POST",
-          headers: {
-            authorization: "Bearer local-test-token",
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            challengeType: "friend",
-            friendChallengeId: "abc123def4",
-          }),
+      const response = await fetch(`http://127.0.0.1:${address.port}/api/game/start`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer local-test-token",
+          "content-type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          challengeType: "friend",
+          friendChallengeId: "abc123def4",
+        }),
+      });
 
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toMatchObject({
         session: { id: existingSession.id },
         resumed: true,
       });
-      expect(sessionQuery.eq).toHaveBeenCalledWith(
-        "friend_challenge_id",
-        challengeId,
-      );
+      expect(sessionQuery.eq).toHaveBeenCalledWith("friend_challenge_id", challengeId);
       expect(queries).toHaveLength(0);
     } finally {
       await new Promise<void>((resolve, reject) => {
@@ -793,20 +758,17 @@ describe("POST /api/game/start Daily challenge date", () => {
     const server = createApp().listen(0);
     try {
       const address = server.address() as AddressInfo;
-      const response = await fetch(
-        `http://127.0.0.1:${address.port}/api/game/start`,
-        {
-          method: "POST",
-          headers: {
-            authorization: "Bearer local-test-token",
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            challengeType: "friend",
-            friendChallengeId: "abc123def4",
-          }),
+      const response = await fetch(`http://127.0.0.1:${address.port}/api/game/start`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer local-test-token",
+          "content-type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          challengeType: "friend",
+          friendChallengeId: "abc123def4",
+        }),
+      });
 
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toMatchObject({
@@ -814,10 +776,7 @@ describe("POST /api/game/start Daily challenge date", () => {
         resumed: true,
         alreadyCompleted: false,
       });
-      expect(reread.eq).toHaveBeenCalledWith(
-        "friend_challenge_id",
-        challengeId,
-      );
+      expect(reread.eq).toHaveBeenCalledWith("friend_challenge_id", challengeId);
       expect(queries).toHaveLength(0);
     } finally {
       await new Promise<void>((resolve, reject) => {

@@ -2,8 +2,7 @@ import rateLimit, { type Options } from "express-rate-limit";
 
 const TOO_MANY_REQUESTS_ERROR = "Too many requests — slow down.";
 
-type LimiterConfig = Pick<Options, "windowMs" | "limit"> &
-  Pick<Partial<Options>, "skip">;
+type LimiterConfig = Pick<Options, "windowMs" | "limit"> & Pick<Partial<Options>, "skip">;
 
 export function createLimiter(config: LimiterConfig) {
   return rateLimit({

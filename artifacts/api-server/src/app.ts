@@ -7,24 +7,18 @@ import { logger } from "./lib/logger";
 import { getPublicAppUrl } from "./lib/public-app-url";
 import { apiLimiter, wikipediaLimiter } from "./middlewares/rate-limit";
 import { mountAppleAppSiteAssociation } from "./middlewares/apple-app-site-association";
-import {
-  mountStaticFrontend,
-  type ChallengePreviewMetadata,
-} from "./middlewares/static-frontend";
+import { mountStaticFrontend, type ChallengePreviewMetadata } from "./middlewares/static-frontend";
 import { createServiceClient } from "./lib/supabase";
 
 type CreateAppOptions = {
-  loadChallengePreview?: (
-    code: string,
-  ) => Promise<ChallengePreviewMetadata | null>;
+  loadChallengePreview?: (code: string) => Promise<ChallengePreviewMetadata | null>;
   serveStaticDir?: string;
 };
 
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 async function loadHostedChallengePreview(
-  reference: string,
+  reference: string
 ): Promise<ChallengePreviewMetadata | null> {
   const column = UUID_PATTERN.test(reference) ? "id" : "short_code";
   const { data } = await createServiceClient()
@@ -63,7 +57,7 @@ export function createApp(options: CreateAppOptions = {}): Express {
           };
         },
       },
-    }),
+    })
   );
   app.use(cors());
   app.use(express.json());
@@ -82,8 +76,7 @@ export function createApp(options: CreateAppOptions = {}): Express {
 
   if (staticDir) {
     mountStaticFrontend(app, path.resolve(staticDir), {
-      loadChallengePreview:
-        options.loadChallengePreview ?? loadHostedChallengePreview,
+      loadChallengePreview: options.loadChallengePreview ?? loadHostedChallengePreview,
       publicAppUrl: getPublicAppUrl(),
     });
   }

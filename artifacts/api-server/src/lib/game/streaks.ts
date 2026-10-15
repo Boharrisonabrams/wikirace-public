@@ -35,8 +35,7 @@ export function computeStreakUpdate(prev: StreakState, today: string): StreakUpd
     };
   }
 
-  const current =
-    prev.last_daily_completed === previousDate(today) ? prev.current_streak + 1 : 1;
+  const current = prev.last_daily_completed === previousDate(today) ? prev.current_streak + 1 : 1;
 
   return {
     current_streak: current,

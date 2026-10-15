@@ -16,7 +16,7 @@ function elapsedSince(startedAt: number, nowMs: number): number {
 export function applyTimingTransition(
   state: TimingState,
   action: TimingAction,
-  nowMs: number,
+  nowMs: number
 ): TimingUpdate {
   if (action === "resume" && state.activeStartedAt === null) {
     return { ...state, activeStartedAt: nowMs };
@@ -26,18 +26,14 @@ export function applyTimingTransition(
     return {
       activeTimeMs:
         state.activeTimeMs +
-        Math.min(
-          elapsedSince(state.activeStartedAt, nowMs),
-          MAX_HEARTBEAT_INTERVAL_MS,
-        ),
+        Math.min(elapsedSince(state.activeStartedAt, nowMs), MAX_HEARTBEAT_INTERVAL_MS),
       activeStartedAt: nowMs,
     };
   }
 
   if (action === "pause" && state.activeStartedAt !== null) {
     return {
-      activeTimeMs:
-        state.activeTimeMs + elapsedSince(state.activeStartedAt, nowMs),
+      activeTimeMs: state.activeTimeMs + elapsedSince(state.activeStartedAt, nowMs),
       activeStartedAt: null,
     };
   }

@@ -21,12 +21,10 @@ type FinisherRow = {
 type SessionMoveRow = {
   clicks: number | string | null;
   completed_at: string | null;
-  game_moves?:
-    | Array<{
-        move_number: number | string | null;
-        to_article: string | null;
-      }>
-    | null;
+  game_moves?: Array<{
+    move_number: number | string | null;
+    to_article: string | null;
+  }> | null;
   start_article: string | null;
   time_seconds: number | string | null;
   user_id: string;
@@ -44,10 +42,7 @@ function finisherKey(row: FinisherRow): string {
 function buildPath(row: SessionMoveRow): string[] | null {
   if (!row.start_article) return null;
   const moves = Array.isArray(row.game_moves) ? [...row.game_moves] : [];
-  moves.sort(
-    (left, right) =>
-      Number(left.move_number ?? 0) - Number(right.move_number ?? 0),
-  );
+  moves.sort((left, right) => Number(left.move_number ?? 0) - Number(right.move_number ?? 0));
   return [row.start_article, ...moves.map((move) => move.to_article ?? "")]
     .filter((title) => title.length > 0)
     .map(toDisplayTitle);
@@ -56,14 +51,14 @@ function buildPath(row: SessionMoveRow): string[] | null {
 async function loadPathLookup(
   admin: SupabaseClient,
   scope: RaceScope,
-  userIds: string[],
+  userIds: string[]
 ): Promise<Map<string, string[]>> {
   if (userIds.length === 0) return new Map();
 
   const query = admin
     .from("game_sessions")
     .select(
-      "user_id, clicks, time_seconds, completed_at, start_article, game_moves(move_number, to_article)",
+      "user_id, clicks, time_seconds, completed_at, start_article, game_moves(move_number, to_article)"
     )
     .in("user_id", userIds)
     .eq("completed", true);
@@ -93,7 +88,7 @@ async function loadPathLookup(
 export async function callerCompletedDailyRace(
   admin: SupabaseClient,
   userId: string,
-  challengeId: string,
+  challengeId: string
 ): Promise<boolean> {
   const { data, error } = await admin
     .from("game_sessions")
@@ -111,7 +106,7 @@ export async function callerCompletedDailyRace(
 export async function attachFinisherPaths<T extends FinisherRow>(
   admin: SupabaseClient,
   scope: RaceScope,
-  rows: T[],
+  rows: T[]
 ): Promise<Array<T & { path?: string[] }>> {
   if (rows.length === 0) return rows;
 
