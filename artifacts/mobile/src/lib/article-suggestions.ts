@@ -1,6 +1,6 @@
 import type {
+  PrivateChallengeDraft,
   PrivateChallengeErrors,
-  PrivateChallengeValidation,
 } from "./private-challenge";
 
 export interface WikipediaSuggestion {
@@ -116,10 +116,19 @@ export function createArticleSuggestionController({
   };
 }
 
+/**
+ * Result of validating the two picked articles. The search tier is chosen
+ * separately on the create screen, so the caller adds `searchTier` before
+ * submitting.
+ */
+export type SelectedPrivateChallengeArticles =
+  | { ok: true; value: Omit<PrivateChallengeDraft, "searchTier"> }
+  | { ok: false; errors: PrivateChallengeErrors };
+
 export function selectedPrivateChallengeDraft(
   start: WikipediaSuggestion | null,
   end: WikipediaSuggestion | null,
-): PrivateChallengeValidation {
+): SelectedPrivateChallengeArticles {
   const errors: PrivateChallengeErrors = {};
   if (!start) {
     errors.startArticle = "Select a starting article from the results.";
