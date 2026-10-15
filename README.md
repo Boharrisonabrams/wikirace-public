@@ -81,7 +81,7 @@ Bo kept these for himself:
 
 - `artifacts/mobile/src/lib` and `artifacts/web/src/lib` share 17 same-named files. `active-timer.ts` and `username.ts` are byte-identical, and `game-search.ts` differs by 47 diff lines. `lib/share-intent` already shows the shared-package fix.
 - CI skips the web Vitest units, Playwright, and pgTAP. The API concurrency test mocks Supabase, so only the local pgTAP run proves database atomicity.
-- Template leftovers remain: `lib/api-spec` and `lib/api-zod` (they describe only `/healthz`), `lib/api-client-react`, Replit Vite plugins in the web config, and the Expo starter README and LICENSE in `artifacts/mobile`.
+- Template leftovers remain: `lib/db`, `lib/api-spec` and `lib/api-zod` (they describe only `/healthz`), `lib/api-client-react`, `scripts/src/hello.ts`, Replit Vite plugins in the web config, and the Expo starter README and LICENSE in `artifacts/mobile`.
 - Four mobile screens run past 1,100 lines and `reminders.ts` is 1,184 lines. `routes/game.ts` has a long `/game/start` handler and `any`-typed sessions. There is no root lint or format config.
 - Some docs are stale: `docs/ai/task.md` is an early brief, and `artifacts/mobile/AGENTS.md` points at Expo SDK 57 docs while the app pins SDK 54.
 - This export uses placeholders for the public host, support address, EAS project ID, App Store Connect app ID, and Apple Team ID. Set them before a real deploy. The live site at wikirace.day runs from the original checkout with real values; this export has not been deployed. The `docs/ai/evidence/` screenshots and recordings are not included.
