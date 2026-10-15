@@ -2,6 +2,9 @@
 
 Play it at [wikirace.day](https://wikirace.day).
 
+[![Lint](https://github.com/Boharrisonabrams/wikirace-public/actions/workflows/lint.yml/badge.svg)](https://github.com/Boharrisonabrams/wikirace-public/actions/workflows/lint.yml)
+[![Tests](https://github.com/Boharrisonabrams/wikirace-public/actions/workflows/tests.yml/badge.svg)](https://github.com/Boharrisonabrams/wikirace-public/actions/workflows/tests.yml)
+
 WikiRace is a Wikipedia racing game. You start on one article and race to a target article using only the links inside each article. Everyone gets the same Daily race, which unlocks at local midnight and allows one ranked attempt plus unranked replays. Players can also practice or send a private race to a friend. Two leaderboards rank the Daily: shortest path and fastest active solve time. WikiRace ships as a web app, an Expo iOS app, and an Express API in one pnpm monorepo. Bo Abrams built it; most of the recorded work happened in July 2026.
 
 ## The defining decision: the server never trusts the client
