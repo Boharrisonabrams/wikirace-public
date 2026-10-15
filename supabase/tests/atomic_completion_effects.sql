@@ -329,11 +329,27 @@ select is(
   'the retry applies official effects exactly once'
 );
 
-update public.friend_challenges
-set end_article = 'Tiger',
-    end_article_title = 'Tiger',
-    end_article_aliases = array['Tigers']
-where id = '30000000-0000-4000-8000-000000000020';
+-- The alias case uses its own friend challenge.
+-- game_sessions_one_shared_attempt_idx allows one session per player per
+-- shared challenge, and session ...0401 below is this player's attempt at
+-- challenge ...0020.
+insert into public.friend_challenges (
+  id,
+  creator_id,
+  start_article,
+  end_article,
+  start_article_title,
+  end_article_title,
+  end_article_aliases
+) values (
+  '30000000-0000-4000-8000-000000000021',
+  '30000000-0000-4000-8000-000000000004',
+  'Start',
+  'Tiger',
+  'Start',
+  'Tiger',
+  array['Tigers']
+);
 
 insert into public.game_sessions (
   id, user_id, challenge_type, friend_challenge_id, start_article, end_article,
@@ -342,7 +358,7 @@ insert into public.game_sessions (
   '30000000-0000-4000-8000-000000000402',
   '30000000-0000-4000-8000-000000000004',
   'friend',
-  '30000000-0000-4000-8000-000000000020',
+  '30000000-0000-4000-8000-000000000021',
   'Start', 'Tiger', array['Start', 'Tigers'], 1, 3000
 );
 
