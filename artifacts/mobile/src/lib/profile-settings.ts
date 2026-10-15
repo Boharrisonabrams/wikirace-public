@@ -1,6 +1,17 @@
-// Placeholder host. Point these at the deployed web app before a release build.
-export const PRIVACY_POLICY_URL = "https://wikirace.example.com/privacy";
-export const SUPPORT_URL = "https://wikirace.example.com/support";
+// Placeholder default. Set EXPO_PUBLIC_APP_URL to the deployed web origin;
+// Expo inlines it into the bundle at build time (see docs/DEPLOY.md).
+const DEFAULT_APP_URL = "https://wikirace.example.com";
+
+export function resolveAppUrl(value: string | undefined): string {
+  const trimmed = value?.trim();
+  return (trimmed ? trimmed : DEFAULT_APP_URL).replace(/\/+$/, "");
+}
+
+const configuredAppUrl = process.env.EXPO_PUBLIC_APP_URL;
+const appUrl = resolveAppUrl(configuredAppUrl);
+
+export const PRIVACY_POLICY_URL = `${appUrl}/privacy`;
+export const SUPPORT_URL = `${appUrl}/support`;
 
 export function normalizeFriendCode(value: string): string {
   return value
