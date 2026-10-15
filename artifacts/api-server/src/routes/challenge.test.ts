@@ -26,6 +26,9 @@ vi.mock("../lib/wikipedia", () => ({
 
 import { createApp } from "../app";
 
+/** Shape of the GET /api/challenge/:id response fields these tests read. */
+type ChallengeResultsBody = { results: Array<Record<string, unknown>> };
+
 afterEach(() => {
   mocks.from.mockReset();
   mocks.fetchArticleDescription.mockClear();
@@ -279,7 +282,7 @@ describe("challenge API compatibility", () => {
       );
 
       expect(response.status).toBe(200);
-      const body = await response.json();
+      const body = (await response.json()) as ChallengeResultsBody;
       expect(body.results[0]).not.toHaveProperty("path");
       expect(queries).toHaveLength(0);
     } finally {
@@ -424,7 +427,7 @@ describe("challenge API compatibility", () => {
       );
 
       expect(response.status).toBe(200);
-      const body = await response.json();
+      const body = (await response.json()) as ChallengeResultsBody;
       expect(body.results).toEqual([
         expect.objectContaining({
           username: "winner",
