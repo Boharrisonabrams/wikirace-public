@@ -1,5 +1,7 @@
 # WikiRace
 
+Play it at [wikirace.day](https://wikirace.day).
+
 WikiRace is a Wikipedia racing game. You start on one article and race to a target article using only the links inside each article. Everyone gets the same Daily race, which unlocks at local midnight and allows one ranked attempt plus unranked replays. Players can also practice or send a private race to a friend. Two leaderboards rank the Daily: shortest path and fastest active solve time. WikiRace ships as a web app, an Expo iOS app, and an Express API in one pnpm monorepo. Bo Abrams built it; most of the recorded work happened in July 2026.
 
 ## The defining decision: the server never trusts the client
@@ -59,8 +61,8 @@ To deploy, follow `docs/DEPLOY.md`: one Railway service built from the root `Doc
 
 ## Status
 
-- **Web:** deployed on Railway with hosted Supabase. Successful deploys are recorded from 2026-07-10 to 2026-07-14 (`docs/NEXT-ITERATION-BACKLOG.md`, `docs/PROJECT_MAP.md`, `docs/ai/state.md`). This export does not verify that the host is still live.
-- **iOS:** a TestFlight build was installed on a physical iPhone on 2026-07-16 and loaded the Daily from production. An external friend group went to Beta App Review the same day; the repo does not record the outcome.
+- **Web:** live. Play it at [wikirace.day](https://wikirace.day). A check on 2026-10-15 got HTTP 200 from the root and from `/api/healthz`. It runs on Railway with hosted Supabase. Successful deploys are recorded from 2026-07-10 to 2026-07-14 (`docs/NEXT-ITERATION-BACKLOG.md`, `docs/PROJECT_MAP.md`, `docs/ai/state.md`).
+- **iOS:** not on the App Store yet. A TestFlight build was installed on a physical iPhone on 2026-07-16 and loaded the Daily from production. An external friend group went to Beta App Review the same day; the repo does not record the outcome. TestFlight builds expire 90 days after upload, so that build is no longer installable. The next step is an App Store release.
 - **Tests:** the last recorded full run (2026-07-29, `docs/ai/state.md`) passed 137 API, 299 mobile, and 4 share-intent tests; the last web unit run (2026-07-25) passed 45.
 - **What went wrong:** the first native iOS build failed on an unused canary Expo package that simulator runs never compiled. An unpinned `eas submit` auto-invited every App Store Connect user on the Apple team. Both became rules in `CLAUDE.md`. `docs/DEPLOY.md` keeps Railway build rules "learned the hard way", such as root-relative `.railwayignore` globs and an SPA catch-all for deep links.
 
@@ -82,7 +84,7 @@ Bo kept these for himself:
 - Template leftovers remain: `lib/db`, `lib/api-spec` and `lib/api-zod` (they describe only `/healthz`), `lib/api-client-react`, `scripts/src/hello.ts`, Replit Vite plugins in the web config, and the Expo starter README and LICENSE in `artifacts/mobile`.
 - Four mobile screens run past 1,100 lines and `reminders.ts` is 1,184 lines. `routes/game.ts` has a long `/game/start` handler and `any`-typed sessions. There is no root lint or format config.
 - Some docs are stale: `docs/ai/task.md` is an early brief, and `artifacts/mobile/AGENTS.md` points at Expo SDK 57 docs while the app pins SDK 54.
-- This export uses placeholders for the public host, support address, EAS project ID, App Store Connect app ID, and Apple Team ID. Set them before a real deploy. The `docs/ai/evidence/` screenshots and recordings are not included.
+- This export uses placeholders for the public host, support address, EAS project ID, App Store Connect app ID, and Apple Team ID. Set them before a real deploy. The live site at wikirace.day runs from the original checkout with real values; this export has not been deployed. The `docs/ai/evidence/` screenshots and recordings are not included.
 
 <!--
 Screenshots placeholder. The images below do not exist yet, so this section is
