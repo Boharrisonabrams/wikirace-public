@@ -7,13 +7,19 @@
     "brand:generate": "node scripts/generate-brand-assets.mjs",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "tsc --build",
-    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck",
+    "lint": "eslint .",
+    "format:check": "prettier --check \"artifacts/api-server/**/*.{ts,tsx,mjs,js,md}\" \"lib/**/*.{ts,tsx,mjs,js,md}\" \"scripts/**/*.{ts,tsx,mjs,js,md}\" \"*.{ts,tsx,mjs,js,md}\""
   },
   "private": true,
   "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "eslint": "9.39.5",
+    "globals": "17.12.0",
     "metro-runtime": "0.83.3",
     "prettier": "^3.8.1",
     "sharp": "0.34.5",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "typescript-eslint": "8.71.0"
   }
 }
