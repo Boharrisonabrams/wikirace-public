@@ -1,4 +1,4 @@
-import type { Session, SupabaseClient } from "@supabase/supabase-js";
+import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
 import { describe, expect, it, vi } from "vitest";
 
 import {
@@ -62,7 +62,7 @@ describe("ensurePlayerSession", () => {
     const signInAnonymously = vi.fn().mockReturnValue(
       new Promise((resolve) => {
         finishSignIn = resolve;
-      }),
+      })
     );
     const client = clientWithAuth({
       getSession: vi.fn().mockResolvedValue({
@@ -80,15 +80,12 @@ describe("ensurePlayerSession", () => {
       error: null,
     });
 
-    await expect(Promise.all([first, second])).resolves.toEqual([
-      guestSession,
-      guestSession,
-    ]);
+    await expect(Promise.all([first, second])).resolves.toEqual([guestSession, guestSession]);
   });
 
   it("returns stable recovery copy when hosted anonymous auth is disabled", async () => {
     expect(PLAYER_SESSION_UNAVAILABLE_MESSAGE).toBe(
-      "Guest play is unavailable. Try again, or sign in with email.",
+      "Guest play is unavailable. Try again, or sign in with email."
     );
     const client = clientWithAuth({
       getSession: vi.fn().mockResolvedValue({
@@ -105,7 +102,7 @@ describe("ensurePlayerSession", () => {
     });
 
     await expect(ensurePlayerSession(client)).rejects.toThrow(
-      "Guest play is unavailable. Try again, or sign in with email.",
+      "Guest play is unavailable. Try again, or sign in with email."
     );
   });
 
@@ -128,9 +125,7 @@ describe("ensurePlayerSession", () => {
       signInAnonymously,
     });
 
-    await expect(ensurePlayerSession(client)).rejects.toThrow(
-      PLAYER_SESSION_UNAVAILABLE_MESSAGE,
-    );
+    await expect(ensurePlayerSession(client)).rejects.toThrow(PLAYER_SESSION_UNAVAILABLE_MESSAGE);
     await expect(ensurePlayerSession(client)).resolves.toBe(guestSession);
     expect(signInAnonymously).toHaveBeenCalledTimes(2);
   });
@@ -139,9 +134,75 @@ describe("ensurePlayerSession", () => {
 describe("isGuestUser", () => {
   it("distinguishes anonymous players from permanent users", () => {
     expect(isGuestUser(guestSession.user)).toBe(true);
-    expect(isGuestUser({ ...guestSession.user, is_anonymous: false })).toBe(
-      false,
-    );
+    expect(isGuestUser({ ...guestSession.user, is_anonymous: false })).toBe(false);
     expect(isGuestUser(null)).toBe(false);
+  });
+});
+
+describe("web client cases", () => {
+  describe("ensurePlayerSession", () => {
+    it("reuses an existing session without creating an anonymous user", async () => {
+      const session = {
+        access_token: "access",
+        refresh_token: "refresh",
+        user: { id: "user-1", is_anonymous: false },
+      };
+      const signInAnonymously = vi.fn();
+      const client = clientWithAuth({
+        getSession: vi.fn().mockResolvedValue({ data: { session }, error: null }),
+        signInAnonymously,
+      });
+
+      await expect(ensurePlayerSession(client)).resolves.toBe(session);
+      expect(signInAnonymously).not.toHaveBeenCalled();
+    });
+
+    it("creates exactly one anonymous session for concurrent callers", async () => {
+      const session = {
+        access_token: "access",
+        refresh_token: "refresh",
+        user: { id: "guest-1", is_anonymous: true },
+      };
+      let resolveAnonymous = null as ((value: unknown) => void) | null;
+      const signInAnonymously = vi.fn().mockReturnValue(
+        new Promise((resolve) => {
+          resolveAnonymous = resolve;
+        })
+      );
+      const client = clientWithAuth({
+        getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+        signInAnonymously,
+      });
+
+      const first = ensurePlayerSession(client);
+      const second = ensurePlayerSession(client);
+
+      await Promise.resolve();
+      expect(signInAnonymously).toHaveBeenCalledTimes(1);
+      resolveAnonymous?.({ data: { session }, error: null });
+
+      await expect(first).resolves.toBe(session);
+      await expect(second).resolves.toBe(session);
+    });
+
+    it("surfaces stable copy when anonymous auth is unavailable", async () => {
+      const client = clientWithAuth({
+        getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+        signInAnonymously: vi.fn().mockResolvedValue({
+          data: { session: null },
+          error: { message: "Anonymous sign-ins are disabled" },
+        }),
+      });
+
+      await expect(ensurePlayerSession(client)).rejects.toThrow(PLAYER_SESSION_UNAVAILABLE_MESSAGE);
+    });
+  });
+
+  describe("isGuestUser", () => {
+    it("recognizes anonymous Supabase users", () => {
+      expect(isGuestUser({ id: "guest-1", is_anonymous: true } as User)).toBe(true);
+      expect(isGuestUser({ id: "user-1", is_anonymous: false } as User)).toBe(false);
+      expect(isGuestUser(null)).toBe(false);
+    });
   });
 });
