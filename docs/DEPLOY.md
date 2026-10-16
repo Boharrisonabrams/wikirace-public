@@ -6,6 +6,42 @@ export, `<project-ref>` stands for your Supabase project ref and
 `<your-app-host>` for your deployed web host. Configure auth providers only on
 the project the app actually uses.
 
+## Deploy values
+
+These deploy-specific values read from the environment. When a variable is
+unset, the code uses the placeholder default in the table, so this public repo
+can be the build source without committing real values.
+
+| Variable | Used by | Placeholder default |
+| --- | --- | --- |
+| `PUBLIC_APP_URL` | API server at runtime: challenge links and preview metadata (`artifacts/api-server/src/lib/public-app-url.ts`) | `https://wikirace.example.com` |
+| `APPLE_TEAM_ID` | API server at runtime: the universal-link file at `/.well-known/apple-app-site-association` | empty, so the file lists no app |
+| `EXPO_PUBLIC_APP_URL` | Mobile: the iOS associated domains (`applinks:` and `webcredentials:`) in `artifacts/mobile/app.config.ts`, and the in-app privacy and support links | `https://wikirace.example.com` |
+| `EAS_PROJECT_ID` | Mobile: `extra.eas.projectId` and the `updates.url` built from it, in `artifacts/mobile/app.config.ts` | `00000000-0000-0000-0000-000000000000` |
+| `SUPABASE_AUTH_SITE_URL` | Supabase CLI (`supabase start`, `supabase config push`): `auth.site_url` in `supabase/config.toml` | `https://wikirace.example.com` |
+| `SUPABASE_AUTH_ADDITIONAL_REDIRECT_URLS` | Supabase CLI: `auth.additional_redirect_urls` in `supabase/config.toml`. Comma-separated; it replaces the whole list. | the placeholder host plus four local dev URLs |
+
+Where to set them:
+
+- API: Railway service variables (step 5).
+- Mobile: the EAS environment for each build profile (`preview`,
+  `production`). Also export `EAS_PROJECT_ID` in the shell that runs `eas`
+  commands, because EAS CLI reads the project ID from the app config before it
+  can load variables from EAS.
+- Supabase CLI: export both variables in the shell that runs `supabase`. The
+  CLI also reads a git-ignored `supabase/.env.local`.
+
+Two values do not come from the environment:
+
+- `ascAppId` in `artifacts/mobile/eas.json` (placeholder `0000000000`). EAS CLI
+  substitutes environment variables only into `ascApiKeyPath`, `ascApiKeyId`,
+  and `ascApiKeyIssuerId` in a submit profile, and it requires `ascAppId` to be
+  digits. Before `eas submit`, set your App Store Connect app ID in the
+  checkout you submit from. Never submit without it (see "iOS Release Rules" in
+  `CLAUDE.md`).
+- The web support address, `SUPPORT_EMAIL` in
+  `artifacts/web/src/lib/legal-content.ts` (placeholder `support@example.com`).
+
 ## 1. Confirm the hosted Supabase project (Bo only)
 
 Open the current project and confirm it is healthy before schema, provider, or
@@ -41,6 +77,10 @@ new leaderboard RPCs). Nothing is dropped or deleted.
 - **URL Configuration → Site URL**: the deployed URL (for example
   `https://<your-app-host>`), and add it to Redirect URLs. Keep the production
   host stable once challenge links are shared.
+- If you push auth settings from `supabase/config.toml` with
+  `supabase config push`, set `SUPABASE_AUTH_SITE_URL` and
+  `SUPABASE_AUTH_ADDITIONAL_REDIRECT_URLS` first (see "Deploy values").
+  Otherwise the push sends the placeholder host.
 
 ## 4. Retrieve hosted keys (Bo only)
 

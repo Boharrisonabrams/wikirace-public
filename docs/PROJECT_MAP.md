@@ -38,7 +38,7 @@ replaces account-specific values with placeholders.
 | Railway production URL | Set through `PUBLIC_APP_URL` (placeholder `https://wikirace.example.com`) | Existing auth settings and shared challenge links depend on the production host. |
 | Railway service label | `wikipath` | This legacy display label may be renamed later without replacing the service. |
 | Supabase project | `<project-ref>` | Changing it would select a different backend project. |
-| EAS project ID | Placeholder UUID in `artifacts/mobile/app.json` | Builds, updates, and credentials stay attached to one EAS project. |
+| EAS project ID | Set through `EAS_PROJECT_ID` in `artifacts/mobile/app.config.ts` (placeholder all-zero UUID) | Builds, updates, and credentials stay attached to one EAS project. |
 | iOS bundle ID | `com.boabrams.wikirace` | Since 2026-07-16. The original `com.boabrams.wikipath` is permanently held by a removed App Store Connect record and can never back a new app; do not switch back. |
 | Android package | `com.boabrams.wikipath` | Changing it creates a different Android app identity. |
 | Legacy app scheme | `wikipath://` | Existing callbacks and links remain compatible. |

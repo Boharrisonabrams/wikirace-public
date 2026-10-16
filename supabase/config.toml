@@ -151,6 +151,12 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
+# Deploy values: the two placeholders below are defaults. The Supabase CLI reads a
+# SUPABASE_<SECTION>_<KEY> environment variable in place of a key in this file, so set
+# SUPABASE_AUTH_SITE_URL and SUPABASE_AUTH_ADDITIONAL_REDIRECT_URLS (comma-separated; it replaces
+# the whole list, so include any local URLs you still need) instead of committing real hosts.
+# env(VAR) is not used here because it has no default: an unset variable leaves the literal
+# "env(VAR)" in place. See the "Deploy values" table in docs/DEPLOY.md.
 site_url = "https://wikirace.example.com"
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
 additional_redirect_urls = ["https://wikirace.example.com", "http://127.0.0.1:8080", "http://localhost:8080", "http://127.0.0.1:5173", "http://localhost:5173"]
