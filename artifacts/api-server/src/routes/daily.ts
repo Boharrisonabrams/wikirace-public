@@ -45,8 +45,7 @@ function challengeToJson(c: any) {
  */
 router.get("/daily", async (req, res) => {
   try {
-    const timeZone =
-      req.query.timeZone === undefined ? "UTC" : req.query.timeZone;
+    const timeZone = req.query.timeZone === undefined ? "UTC" : req.query.timeZone;
     if (typeof timeZone !== "string") {
       return res.status(400).json({ error: "Invalid time zone" });
     }
@@ -77,12 +76,11 @@ router.get("/daily", async (req, res) => {
         resolveArticle(pair.start).then((t) => t ?? pair.start),
         resolveArticle(pair.end).then((t) => t ?? pair.end),
       ]);
-      const [endArticleAliases, startDescription, endDescription] =
-        await Promise.all([
-          fetchArticleRedirectAliases(endTitle),
-          fetchArticleDescription(startTitle),
-          fetchArticleDescription(endTitle),
-        ]);
+      const [endArticleAliases, startDescription, endDescription] = await Promise.all([
+        fetchArticleRedirectAliases(endTitle),
+        fetchArticleDescription(startTitle),
+        fetchArticleDescription(endTitle),
+      ]);
 
       const { data: inserted, error } = await admin
         .from("daily_challenges")
@@ -117,13 +115,8 @@ router.get("/daily", async (req, res) => {
           .eq("challenge_date", today)
           .single();
         if (existingError) {
-          req.log.error(
-            { err: existingError },
-            "Error reloading daily challenge",
-          );
-          return res
-            .status(500)
-            .json({ error: "Failed to get daily challenge" });
+          req.log.error({ err: existingError }, "Error reloading daily challenge");
+          return res.status(500).json({ error: "Failed to get daily challenge" });
         }
         challenge = existing;
       } else {

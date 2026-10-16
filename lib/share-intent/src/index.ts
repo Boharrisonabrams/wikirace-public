@@ -48,9 +48,7 @@ export function isSafeChallengeUrl(value: unknown): value is string {
 }
 
 export function formatElapsedTime(totalSeconds: number): string {
-  const safeSeconds = Number.isFinite(totalSeconds)
-    ? Math.max(0, Math.floor(totalSeconds))
-    : 0;
+  const safeSeconds = Number.isFinite(totalSeconds) ? Math.max(0, Math.floor(totalSeconds)) : 0;
   const minutes = Math.floor(safeSeconds / 60);
   const seconds = safeSeconds % 60;
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
@@ -77,10 +75,7 @@ export function formatShareIntent(input: ShareCopyInput): ShareContent {
       typeof input.elapsedSeconds === "number" && input.elapsedSeconds > 0
         ? `${clickLabel} · ${formatElapsedTime(input.elapsedSeconds)}`
         : clickLabel;
-    text =
-      `I finished ${startTitle} → ${endTitle}.\n` +
-      `\n${details}\n\n` +
-      `Can you beat me?`;
+    text = `I finished ${startTitle} → ${endTitle}.\n` + `\n${details}\n\n` + `Can you beat me?`;
   } else {
     text =
       `I stopped at ${inline(input.stoppedAt)} while trying to reach ${endTitle}.\n` +

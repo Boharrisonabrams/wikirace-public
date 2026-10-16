@@ -54,9 +54,7 @@ describe("dailyPairForDate", () => {
     const pairs = new Set<string>();
 
     for (let day = 0; day < 180; day++) {
-      const date = new Date(Date.UTC(2026, 0, day + 1))
-        .toISOString()
-        .slice(0, 10);
+      const date = new Date(Date.UTC(2026, 0, day + 1)).toISOString().slice(0, 10);
       const pair = dailyPairForDate(date);
 
       expect(dailyPairForDate(date)).toEqual(pair);
@@ -66,9 +64,7 @@ describe("dailyPairForDate", () => {
       expect(topics).toContain(pair.startTopic);
       expect(topics).toContain(pair.endTopic);
       expect(pair.startTopic).not.toBe(pair.endTopic);
-      expect([pair.startRecognition, pair.endRecognition]).toContain(
-        "familiar",
-      );
+      expect([pair.startRecognition, pair.endRecognition]).toContain("familiar");
       expect(["easy", "medium", "hard"]).toContain(pair.difficulty);
       expect(pair.difficultySource).toBe("provisional");
       expect(pair.generatorVersion).toBe(2);

@@ -70,20 +70,17 @@ describe("challenge API compatibility", () => {
     const server = createApp().listen(0);
     try {
       const address = server.address() as AddressInfo;
-      const response = await fetch(
-        `http://127.0.0.1:${address.port}/api/challenge`,
-        {
-          method: "POST",
-          headers: {
-            authorization: "Bearer local-test-token",
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            startArticle: "Start",
-            endArticle: "End",
-          }),
+      const response = await fetch(`http://127.0.0.1:${address.port}/api/challenge`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer local-test-token",
+          "content-type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          startArticle: "Start",
+          endArticle: "End",
+        }),
+      });
 
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toMatchObject({
@@ -112,20 +109,17 @@ describe("challenge API compatibility", () => {
     const server = createApp().listen(0);
     try {
       const address = server.address() as AddressInfo;
-      const response = await fetch(
-        `http://127.0.0.1:${address.port}/api/challenge`,
-        {
-          method: "POST",
-          headers: {
-            authorization: "Bearer local-test-token",
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            startArticle: "USA",
-            endArticle: "United States",
-          }),
+      const response = await fetch(`http://127.0.0.1:${address.port}/api/challenge`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer local-test-token",
+          "content-type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          startArticle: "USA",
+          endArticle: "United States",
+        }),
+      });
 
       expect(response.status).toBe(400);
       await expect(response.json()).resolves.toEqual({
@@ -170,26 +164,23 @@ describe("challenge API compatibility", () => {
     const server = createApp().listen(0);
     try {
       const address = server.address() as AddressInfo;
-      const response = await fetch(
-        `http://127.0.0.1:${address.port}/api/challenge`,
-        {
-          method: "POST",
-          headers: {
-            authorization: "Bearer local-test-token",
-            "content-type": "application/json",
-          },
-          body: JSON.stringify({
-            startArticle: "Start",
-            endArticle: "Target",
-          }),
+      const response = await fetch(`http://127.0.0.1:${address.port}/api/challenge`, {
+        method: "POST",
+        headers: {
+          authorization: "Bearer local-test-token",
+          "content-type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          startArticle: "Start",
+          endArticle: "Target",
+        }),
+      });
 
       expect(response.status).toBe(200);
       expect(insertQuery.insert).toHaveBeenCalledWith(
         expect.objectContaining({
           end_article_aliases: [],
-        }),
+        })
       );
       await expect(response.json()).resolves.toMatchObject({
         challenge: {
@@ -284,7 +275,7 @@ describe("challenge API compatibility", () => {
         `http://127.0.0.1:${address.port}/api/challenge/${challenge.short_code}`,
         {
           headers: { authorization: "Bearer local-test-token" },
-        },
+        }
       );
 
       expect(response.status).toBe(200);
@@ -390,13 +381,7 @@ describe("challenge API compatibility", () => {
     pathQuery.in.mockReturnValue(pathQuery);
     pathQuery.eq.mockReturnValue(pathQuery);
 
-    const queries = [
-      challengeQuery,
-      openQuery,
-      profileQuery,
-      mySessionQuery,
-      pathQuery,
-    ];
+    const queries = [challengeQuery, openQuery, profileQuery, mySessionQuery, pathQuery];
     mocks.from.mockImplementation(() => queries.shift());
     mocks.rpc.mockResolvedValue({
       data: [
@@ -435,7 +420,7 @@ describe("challenge API compatibility", () => {
         `http://127.0.0.1:${address.port}/api/challenge/${challenge.short_code}`,
         {
           headers: { authorization: "Bearer local-test-token" },
-        },
+        }
       );
 
       expect(response.status).toBe(200);

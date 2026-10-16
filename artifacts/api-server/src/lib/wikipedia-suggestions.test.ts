@@ -24,8 +24,8 @@ describe("Wikipedia REST suggestions", () => {
             { title: "Castle Rock", description: null },
           ],
         }),
-        { status: 200 },
-      ),
+        { status: 200 }
+      )
     );
     vi.stubGlobal("fetch", fetchMock);
 
@@ -35,18 +35,15 @@ describe("Wikipedia REST suggestions", () => {
     ]);
     expect(fetchMock).toHaveBeenCalledWith(
       "https://en.wikipedia.org/w/rest.php/v1/search/page?q=cast&limit=6",
-      expect.objectContaining({ headers: expect.any(Object) }),
+      expect.objectContaining({ headers: expect.any(Object) })
     );
   });
 
   it("throws on an upstream error", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(new Response("unavailable", { status: 503 })),
-    );
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("unavailable", { status: 503 })));
 
     await expect(searchWikipediaSuggestions("cast", 6)).rejects.toThrow(
-      "Wikipedia REST API responded 503",
+      "Wikipedia REST API responded 503"
     );
   });
 
@@ -65,22 +62,16 @@ describe("Wikipedia REST suggestions", () => {
               },
             },
           }),
-          { status: 200 },
-        ),
-      ),
+          { status: 200 }
+        )
+      )
     );
 
-    await expect(fetchArticleRedirectAliases("Tiger")).resolves.toEqual([
-      "Tigers",
-      "Tiger cat",
-    ]);
+    await expect(fetchArticleRedirectAliases("Tiger")).resolves.toEqual(["Tigers", "Tiger cat"]);
   });
 
   it("omits aliases and descriptions when wikipedia lookup fails", async () => {
-    vi.stubGlobal(
-      "fetch",
-      vi.fn().mockResolvedValue(new Response("unavailable", { status: 503 })),
-    );
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("unavailable", { status: 503 })));
 
     await expect(fetchArticleRedirectAliases("Lion")).resolves.toEqual([]);
     await expect(fetchArticleDescription("Lion")).resolves.toBeNull();

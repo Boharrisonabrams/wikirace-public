@@ -3,10 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { attachFinisherPaths } from "../lib/game/path-reveal";
 import { getPublicAppUrl } from "../lib/public-app-url";
 import { createServiceClient, getRequestUser } from "../lib/supabase";
-import {
-  parseRequestedSearchTier,
-  type SearchTier,
-} from "../lib/game/session-mode";
+import { parseRequestedSearchTier, type SearchTier } from "../lib/game/session-mode";
 import {
   fetchArticleDescription,
   fetchArticleRedirectAliases,
@@ -15,22 +12,21 @@ import {
 import { titlesMatch, toUrlTitle } from "../lib/game/titles";
 
 const router = Router();
-const UUID_PATTERN =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const PUBLIC_APP_URL = getPublicAppUrl();
 
 function isMissingSearchTierColumnError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
   const record = error as Record<string, unknown>;
   return [record.message, record.details, record.hint].some(
-    (value) => typeof value === "string" && value.includes("search_tier"),
+    (value) => typeof value === "string" && value.includes("search_tier")
   );
 }
 
 async function insertFriendChallenge(
   admin: SupabaseClient,
   values: Record<string, unknown>,
-  searchTier: SearchTier,
+  searchTier: SearchTier
 ) {
   const withTier = await admin
     .from("friend_challenges")
@@ -94,8 +90,7 @@ router.post("/challenge", async (req, res) => {
     const user = await getRequestUser(req);
     if (!user) return res.status(401).json({ error: "Unauthorized" });
 
-    const { fromSessionId, startArticle, endArticle, searchTier } =
-      req.body ?? {};
+    const { fromSessionId, startArticle, endArticle, searchTier } = req.body ?? {};
     const admin = createServiceClient();
     let requestedSearchTier: SearchTier;
     try {
@@ -116,25 +111,18 @@ router.post("/challenge", async (req, res) => {
       const { data: session } = await admin
         .from("game_sessions")
         .select(
-          "user_id, challenge_type, challenge_id, friend_challenge_id, start_article, end_article",
+          "user_id, challenge_type, challenge_id, friend_challenge_id, start_article, end_article"
         )
         .eq("id", fromSessionId)
         .single();
       if (!session) return res.status(404).json({ error: "Session not found" });
-      if (session.user_id !== user.id)
-        return res.status(403).json({ error: "Forbidden" });
+      if (session.user_id !== user.id) return res.status(403).json({ error: "Forbidden" });
       sourceSession = session;
       if (session.friend_challenge_id) {
-        const existing = await loadChallenge(
-          admin,
-          session.friend_challenge_id,
-        );
+        const existing = await loadChallenge(admin, session.friend_challenge_id);
         if (existing) {
           return res.json({
-            challenge: challengeToJson(
-              existing,
-              await loadDailyDate(admin, existing),
-            ),
+            challenge: challengeToJson(existing, await loadDailyDate(admin, existing)),
           });
         }
       }
@@ -144,41 +132,29 @@ router.post("/challenge", async (req, res) => {
       dailyChallengeId = session.challenge_id;
     } else {
       if (!startArticle || !endArticle) {
-        return res
-          .status(400)
-          .json({ error: "startArticle and endArticle are required" });
+        return res.status(400).json({ error: "startArticle and endArticle are required" });
       }
       if (titlesMatch(startArticle, endArticle)) {
-        return res
-          .status(400)
-          .json({ error: "Start and end must be different articles" });
+        return res.status(400).json({ error: "Start and end must be different articles" });
       }
       const [resolvedStart, resolvedEnd] = await Promise.all([
         resolveArticle(startArticle),
         resolveArticle(endArticle),
       ]);
       if (!resolvedStart)
-        return res
-          .status(400)
-          .json({ error: `Article not found: ${startArticle}` });
-      if (!resolvedEnd)
-        return res
-          .status(400)
-          .json({ error: `Article not found: ${endArticle}` });
+        return res.status(400).json({ error: `Article not found: ${startArticle}` });
+      if (!resolvedEnd) return res.status(400).json({ error: `Article not found: ${endArticle}` });
       if (titlesMatch(resolvedStart, resolvedEnd)) {
-        return res
-          .status(400)
-          .json({ error: "Start and end must be different articles" });
+        return res.status(400).json({ error: "Start and end must be different articles" });
       }
       startTitle = resolvedStart;
       endTitle = resolvedEnd;
     }
-    const [endArticleAliases, startDescription, endDescription] =
-      await Promise.all([
-        fetchArticleRedirectAliases(endTitle),
-        fetchArticleDescription(startTitle),
-        fetchArticleDescription(endTitle),
-      ]);
+    const [endArticleAliases, startDescription, endDescription] = await Promise.all([
+      fetchArticleRedirectAliases(endTitle),
+      fetchArticleDescription(startTitle),
+      fetchArticleDescription(endTitle),
+    ]);
 
     const { data: challenge, error } = await insertFriendChallenge(
       admin,
@@ -194,7 +170,7 @@ router.post("/challenge", async (req, res) => {
         start_description: startDescription,
         end_description: endDescription,
       },
-      requestedSearchTier,
+      requestedSearchTier
     );
 
     if (error || !challenge) {
@@ -213,10 +189,7 @@ router.post("/challenge", async (req, res) => {
     }
 
     return res.json({
-      challenge: challengeToJson(
-        challenge,
-        await loadDailyDate(admin, challenge),
-      ),
+      challenge: challengeToJson(challenge, await loadDailyDate(admin, challenge)),
     });
   } catch (err) {
     req.log.error({ err }, "Error creating challenge");
@@ -232,8 +205,7 @@ router.get("/challenge/:id", async (req, res) => {
   try {
     const admin = createServiceClient();
     const challenge = await loadChallenge(admin, req.params.id);
-    if (!challenge)
-      return res.status(404).json({ error: "Challenge not found" });
+    if (!challenge) return res.status(404).json({ error: "Challenge not found" });
 
     await admin.from("challenge_link_events").insert({
       challenge_id: challenge.id,
@@ -270,7 +242,7 @@ router.get("/challenge/:id", async (req, res) => {
     }
 
     const sanitizedResults = (results ?? []).map(
-      ({ path: _path, ...result }: Record<string, any>) => result,
+      ({ path: _path, ...result }: Record<string, any>) => result
     );
     const revealedResults = mySession?.completed
       ? await attachFinisherPaths(
@@ -281,22 +253,17 @@ router.get("/challenge/:id", async (req, res) => {
             completed_at: string | null;
             time_seconds: number;
             user_id: string;
-          }>,
+          }>
         )
       : sanitizedResults;
 
     return res.json({
-      challenge: challengeToJson(
-        challenge,
-        await loadDailyDate(admin, challenge),
-      ),
+      challenge: challengeToJson(challenge, await loadDailyDate(admin, challenge)),
       creator: creator ?? { username: "unknown", display_name: null },
-      results: revealedResults.map(
-        ({ user_id: resultUserId, ...result }: Record<string, any>) => ({
-          ...result,
-          is_current_user: user?.id === resultUserId,
-        }),
-      ),
+      results: revealedResults.map(({ user_id: resultUserId, ...result }: Record<string, any>) => ({
+        ...result,
+        is_current_user: user?.id === resultUserId,
+      })),
       mySession,
     });
   } catch (err) {
@@ -310,8 +277,7 @@ router.post("/challenge/:id/start", async (req, res) => {
   try {
     const admin = createServiceClient();
     const challenge = await loadChallenge(admin, req.params.id);
-    if (!challenge)
-      return res.status(404).json({ error: "Challenge not found" });
+    if (!challenge) return res.status(404).json({ error: "Challenge not found" });
     const user = await getRequestUser(req);
     const { error } = await admin.from("challenge_link_events").insert({
       challenge_id: challenge.id,

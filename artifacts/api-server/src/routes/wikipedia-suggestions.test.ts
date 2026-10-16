@@ -44,12 +44,10 @@ describe("GET /api/wikipedia/suggestions", () => {
       Array.from({ length: 8 }, (_, index) => ({
         title: `Castle ${index}`,
         description: index === 0 ? null : `Result ${index}`,
-      })),
+      }))
     );
 
-    const response = await request(
-      "/api/wikipedia/suggestions?q=castle&limit=99",
-    );
+    const response = await request("/api/wikipedia/suggestions?q=castle&limit=99");
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
@@ -62,9 +60,7 @@ describe("GET /api/wikipedia/suggestions", () => {
   });
 
   it("returns a stable upstream error without leaking its body", async () => {
-    mocks.searchWikipediaSuggestions.mockRejectedValue(
-      new Error("upstream secret body"),
-    );
+    mocks.searchWikipediaSuggestions.mockRejectedValue(new Error("upstream secret body"));
 
     const response = await request("/api/wikipedia/suggestions?q=castle");
 

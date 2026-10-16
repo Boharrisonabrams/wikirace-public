@@ -35,6 +35,7 @@
 This repo uses the two-agent workflow: Claude Opus plans + reviews, Codex implements.
 
 **Claude's role in this repo:**
+
 - Read `docs/ai/task.md` → produce `docs/ai/architecture.md` via `/architect`
 - For large/high-risk planning, use `/ultraplan`, then capture the approved plan in `docs/ai/architecture.md`
 - Launch Codex implementation via `/implement-codex` when Bo wants Codex coding under Claude supervision
@@ -44,6 +45,7 @@ This repo uses the two-agent workflow: Claude Opus plans + reviews, Codex implem
 **Codex's role:** see `AGENTS.md`
 
 **Shared bridge files** (all tracked, not session scratch):
+
 - `docs/ai/task.md`: brief
 - `docs/ai/architecture.md`: Claude's plan
 - `docs/ai/state.md`: Codex's implementation state

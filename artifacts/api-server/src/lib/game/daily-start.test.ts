@@ -1,20 +1,15 @@
 import { describe, expect, it } from "vitest";
-import {
-  assertDailyChallengeDate,
-  insertReplayWithRetry,
-} from "./daily-start";
+import { assertDailyChallengeDate, insertReplayWithRetry } from "./daily-start";
 
 describe("assertDailyChallengeDate", () => {
   it("accepts the challenge for the server-derived local date", () => {
-    expect(() =>
-      assertDailyChallengeDate("2026-07-10", "2026-07-10"),
-    ).not.toThrow();
+    expect(() => assertDailyChallengeDate("2026-07-10", "2026-07-10")).not.toThrow();
   });
 
   it("rejects a challenge from another local date", () => {
-    expect(() =>
-      assertDailyChallengeDate("2026-07-09", "2026-07-10"),
-    ).toThrow("Daily challenge is not current");
+    expect(() => assertDailyChallengeDate("2026-07-09", "2026-07-10")).toThrow(
+      "Daily challenge is not current"
+    );
   });
 });
 

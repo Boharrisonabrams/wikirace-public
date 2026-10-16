@@ -82,9 +82,7 @@ describe("GET /api/leaderboard/daily", () => {
     };
     supabaseMocks.rpc.mockResolvedValue({ data: [row], error: null });
 
-    const response = await requestApi(
-      `/leaderboard/daily?challengeId=${CHALLENGE_ID}`,
-    );
+    const response = await requestApi(`/leaderboard/daily?challengeId=${CHALLENGE_ID}`);
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
@@ -128,10 +126,9 @@ describe("GET /api/leaderboard/daily", () => {
     supabaseMocks.rpc.mockResolvedValue({ data: [row], error: null });
     supabaseMocks.from.mockReturnValue(eligibilityQuery);
 
-    const response = await requestApi(
-      `/leaderboard/daily?challengeId=${CHALLENGE_ID}`,
-      { headers: { authorization: "Bearer permanent-user-token" } },
-    );
+    const response = await requestApi(`/leaderboard/daily?challengeId=${CHALLENGE_ID}`, {
+      headers: { authorization: "Bearer permanent-user-token" },
+    });
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
@@ -200,10 +197,9 @@ describe("GET /api/leaderboard/daily", () => {
     supabaseMocks.rpc.mockResolvedValue({ data: [row], error: null });
     supabaseMocks.from.mockImplementation(() => queries.shift());
 
-    const response = await requestApi(
-      `/leaderboard/daily?challengeId=${CHALLENGE_ID}`,
-      { headers: { authorization: "Bearer permanent-user-token" } },
-    );
+    const response = await requestApi(`/leaderboard/daily?challengeId=${CHALLENGE_ID}`, {
+      headers: { authorization: "Bearer permanent-user-token" },
+    });
 
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
@@ -215,9 +211,7 @@ describe("GET /api/leaderboard/daily", () => {
         },
       ],
     });
-    expect(pathQuery.in).toHaveBeenCalledWith("user_id", [
-      "00000000-0000-0000-0000-000000000020",
-    ]);
+    expect(pathQuery.in).toHaveBeenCalledWith("user_id", ["00000000-0000-0000-0000-000000000020"]);
   });
 
   it("selects Fastest while preserving caller auth for friends filtering", async () => {
@@ -226,7 +220,7 @@ describe("GET /api/leaderboard/daily", () => {
 
     const response = await requestApi(
       `/leaderboard/daily?challengeId=${CHALLENGE_ID}&board=fastest&friendsOnly=true&limit=500&offset=7`,
-      { headers: { authorization: "Bearer permanent-user-token" } },
+      { headers: { authorization: "Bearer permanent-user-token" } }
     );
 
     expect(response.status).toBe(200);
@@ -234,9 +228,7 @@ describe("GET /api/leaderboard/daily", () => {
       board: "fastest",
       leaderboard: [],
     });
-    expect(supabaseMocks.authHeader).toHaveBeenCalledWith(
-      "Bearer permanent-user-token",
-    );
+    expect(supabaseMocks.authHeader).toHaveBeenCalledWith("Bearer permanent-user-token");
     expect(supabaseMocks.rpc).toHaveBeenCalledWith("get_daily_leaderboard_v2", {
       p_challenge_id: CHALLENGE_ID,
       p_board: "fastest",
@@ -248,7 +240,7 @@ describe("GET /api/leaderboard/daily", () => {
 
   it("rejects an invalid board before calling the database", async () => {
     const response = await requestApi(
-      `/leaderboard/daily?challengeId=${CHALLENGE_ID}&board=combined`,
+      `/leaderboard/daily?challengeId=${CHALLENGE_ID}&board=combined`
     );
 
     expect(response.status).toBe(400);
@@ -650,7 +642,7 @@ describe("DELETE /api/profile/me", () => {
     expect(supabaseMocks.deleteUser).toHaveBeenCalledWith(USER_ID, false);
     expect(supabaseMocks.deleteUser).not.toHaveBeenCalledWith(
       "00000000-0000-0000-0000-000000000099",
-      expect.anything(),
+      expect.anything()
     );
   });
 

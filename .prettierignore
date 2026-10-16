@@ -1,0 +1,12 @@
+node_modules
+dist
+build
+coverage
+pnpm-lock.yaml
+lib/db
+scripts/src/hello.ts
+*.json
+supabase/**
+docs/**
+artifacts/mobile/ios
+artifacts/mobile/android

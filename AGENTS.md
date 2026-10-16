@@ -19,6 +19,7 @@ This file is read by Codex. Claude reads `CLAUDE.md`. Both point at `docs/ai/*` 
 ## Your role
 
 You are the **primary agent harness**. You own:
+
 - file edits
 - shell commands
 - test runs
@@ -31,12 +32,14 @@ Claude Opus is in a separate session producing architecture plans and reviews. Y
 ## Handoff protocol
 
 **Reading Claude's work:**
+
 - `docs/ai/task.md`: the brief
 - `docs/ai/architecture.md`: Claude's plan (read this first for any non-trivial implementation)
 - `docs/ai/review-opus.md`: Claude's draft review findings (Phase 1 of two-pass review)
 - `docs/ai/review.md`: the authoritative review you write in Phase 2 (see "Review adjudication mode" below)
 
 **Your output to Claude:**
+
 - `docs/ai/state.md`: update after meaningful progress: branch, files changed, tests run, deviations, next action, questions
 - the current `git diff`: Claude reads this during review
 
@@ -63,21 +66,26 @@ When launched by Claude Code, treat Claude's prompt as orchestration context, no
 When `/review-codex` hands off to you (typically via `codex exec` launched from Claude), you are the **final authority** on the review. Claude Opus wrote a draft at `docs/ai/review-opus.md`. You write the authoritative `docs/ai/review.md`.
 
 Responsibilities:
+
 1. Read `docs/ai/review-opus.md` as read-only. Do not modify it.
 2. For each of Claude's findings (F1..Fn), write one adjudication block in `docs/ai/review.md`:
+
    ```
    ### F1: <title>: ACCEPT | REJECT | ADJUST
    - Claude's take: <one-line summary>
    - Codex's take: <your reasoning>
    - Action: <concrete next step, or 'none' if rejected>
    ```
+
    - **ACCEPT** when Claude is correct and the action is clear.
    - **REJECT** when the finding is wrong, based on a misread, or a style preference that isn't codified. Explain why.
    - **ADJUST** when the finding points at a real issue but the proposed fix is off. Refine the scope or the action.
+
 3. Add a `## Findings Claude missed` section with any issues you'd raise independently. Assign new IDs (C1, C2, …).
 4. Write the final `## Verdict`: `ready` | `ready after small fixes` | `needs rework`. Your verdict is authoritative.
 
 Ground rules:
+
 - You do not edit source files in this mode, only `docs/ai/review.md`.
 - `review-opus.md` stays on disk unchanged as a learning signal. Do not overwrite it.
 - If a finding requires prod-DB or prod-credential access to verify, mark it ADJUST with the blocker noted; do not silently skip.
@@ -92,6 +100,7 @@ Ground rules:
 ## Project-specific rules
 
 **Load from the repo's own `CLAUDE.md`. Its rules apply to you too.** In particular, respect:
+
 - Deployment workflow: one Railway service from the root `Dockerfile`; follow "Railway Build Rules" in `docs/DEPLOY.md`
 - iOS release rules in `CLAUDE.md` (pinned `ascAppId`, SDK-aligned native dependencies, explicit-approval distribution)
 - The server is the only game writer: never move rule decisions (move legality, completion, ranking) into a client

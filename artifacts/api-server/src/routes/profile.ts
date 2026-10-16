@@ -19,9 +19,7 @@ type ProfileRow = {
   claimed_at: string | null;
 };
 
-type UsernameValidationResult =
-  | { ok: true; username: string }
-  | { ok: false; error: string };
+type UsernameValidationResult = { ok: true; username: string } | { ok: false; error: string };
 
 function activeTimeMs(session: OfficialDailySession): number {
   const activeMs = Number(session.active_time_ms ?? 0);
@@ -69,27 +67,19 @@ function statsToJson(s: any, officialSessions: OfficialDailySession[]) {
   return {
     gamesPlayed: officialSessions.length,
     gamesWon: wins.length,
-    totalClicks: officialSessions.reduce(
-      (sum, session) => sum + Number(session.clicks),
-      0,
-    ),
+    totalClicks: officialSessions.reduce((sum, session) => sum + Number(session.clicks), 0),
     totalTimeSeconds: officialSessions.reduce(
       (sum, session) => sum + Number(session.time_seconds ?? 0),
-      0,
+      0
     ),
     currentStreak: s?.current_streak ?? 0,
     longestStreak: s?.longest_streak ?? 0,
     lastDailyCompleted: s?.last_daily_completed ?? null,
     averageClicks:
-      wins.length > 0
-        ? winClicks.reduce((sum, clicks) => sum + clicks, 0) / wins.length
-        : null,
+      wins.length > 0 ? winClicks.reduce((sum, clicks) => sum + clicks, 0) / wins.length : null,
     averageActiveTimeMs:
       wins.length > 0
-        ? Math.round(
-            winActiveTimes.reduce((sum, timeMs) => sum + timeMs, 0) /
-              wins.length,
-          )
+        ? Math.round(winActiveTimes.reduce((sum, timeMs) => sum + timeMs, 0) / wins.length)
         : null,
     bestClicks: wins.length > 0 ? Math.min(...winClicks) : null,
     fastestTimeMs: wins.length > 0 ? Math.min(...winActiveTimes) : null,
@@ -155,10 +145,7 @@ router.get("/profile/me", async (req, res) => {
     }
     if (!profile) return res.status(404).json({ error: "Profile not found" });
     if (sessionsError) {
-      req.log.error(
-        { err: sessionsError },
-        "Error fetching official statistics",
-      );
+      req.log.error({ err: sessionsError }, "Error fetching official statistics");
       return res.status(500).json({ error: "Failed to fetch profile" });
     }
 
@@ -215,9 +202,7 @@ router.delete("/profile/me", async (req, res) => {
     const user = await getRequestUser(req);
     if (!user) return res.status(401).json({ error: "Unauthorized" });
     if (req.body?.confirmation !== "DELETE") {
-      return res
-        .status(400)
-        .json({ error: "Account deletion confirmation is required" });
+      return res.status(400).json({ error: "Account deletion confirmation is required" });
     }
 
     const admin = createServiceClient();

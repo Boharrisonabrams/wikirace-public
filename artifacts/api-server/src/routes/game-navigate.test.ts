@@ -68,12 +68,9 @@ function mockSessionQuery(overrides: Record<string, unknown> = {}) {
   dailyChallengeQuery.eq.mockReturnValue(dailyChallengeQuery);
   dailyChallengeQuery.maybeSingle.mockResolvedValue({
     data: {
-      end_article_aliases:
-        (overrides.end_article_aliases as string[] | null | undefined) ?? null,
-      start_description:
-        (overrides.start_description as string | null | undefined) ?? null,
-      end_description:
-        (overrides.end_description as string | null | undefined) ?? null,
+      end_article_aliases: (overrides.end_article_aliases as string[] | null | undefined) ?? null,
+      start_description: (overrides.start_description as string | null | undefined) ?? null,
+      end_description: (overrides.end_description as string | null | undefined) ?? null,
     },
     error: null,
   });
@@ -81,12 +78,9 @@ function mockSessionQuery(overrides: Record<string, unknown> = {}) {
   friendChallengeQuery.eq.mockReturnValue(friendChallengeQuery);
   friendChallengeQuery.maybeSingle.mockResolvedValue({
     data: {
-      end_article_aliases:
-        (overrides.end_article_aliases as string[] | null | undefined) ?? null,
-      start_description:
-        (overrides.start_description as string | null | undefined) ?? null,
-      end_description:
-        (overrides.end_description as string | null | undefined) ?? null,
+      end_article_aliases: (overrides.end_article_aliases as string[] | null | undefined) ?? null,
+      start_description: (overrides.start_description as string | null | undefined) ?? null,
+      end_description: (overrides.end_description as string | null | undefined) ?? null,
     },
     error: null,
   });
@@ -148,7 +142,7 @@ describe("POST /api/game/navigate", () => {
         p_session_id: sessionId,
         p_move_number: 1,
         p_won: true,
-      }),
+      })
     );
     expect(mocks.from).toHaveBeenCalledTimes(2);
   });
@@ -172,10 +166,7 @@ describe("POST /api/game/navigate", () => {
       reason: "Wikipedia didn't answer — try that link again.",
     });
     expect(mocks.rpc).toHaveBeenCalledTimes(1);
-    expect(mocks.rpc).toHaveBeenCalledWith(
-      "transition_game_timing",
-      expect.any(Object),
-    );
+    expect(mocks.rpc).toHaveBeenCalledWith("transition_game_timing", expect.any(Object));
   });
 
   it("keeps real invalid moves as 400 responses", async () => {
@@ -195,10 +186,7 @@ describe("POST /api/game/navigate", () => {
       reason: "destination is not linked from the source article",
     });
     expect(mocks.rpc).toHaveBeenCalledTimes(1);
-    expect(mocks.rpc).toHaveBeenCalledWith(
-      "transition_game_timing",
-      expect.any(Object),
-    );
+    expect(mocks.rpc).toHaveBeenCalledWith("transition_game_timing", expect.any(Object));
   });
 
   it("preserves empty successful parses as invalid moves", async () => {
@@ -218,10 +206,7 @@ describe("POST /api/game/navigate", () => {
       reason: "destination is not linked from the source article",
     });
     expect(mocks.rpc).toHaveBeenCalledTimes(1);
-    expect(mocks.rpc).toHaveBeenCalledWith(
-      "transition_game_timing",
-      expect.any(Object),
-    );
+    expect(mocks.rpc).toHaveBeenCalledWith("transition_game_timing", expect.any(Object));
   });
 
   it("counts a redirect alias arrival as a win", async () => {
@@ -258,7 +243,7 @@ describe("POST /api/game/navigate", () => {
         p_session_id: sessionId,
         p_to_article: "Tigers",
         p_won: true,
-      }),
+      })
     );
   });
 
@@ -296,7 +281,7 @@ describe("POST /api/game/navigate", () => {
         p_session_id: sessionId,
         p_to_article: "Tigers",
         p_won: false,
-      }),
+      })
     );
   });
 });

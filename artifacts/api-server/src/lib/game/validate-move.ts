@@ -6,9 +6,7 @@ export interface ValidateMoveInput {
   fromArticleLinks: string[];
 }
 
-export type ValidateMoveResult =
-  | { valid: true }
-  | { valid: false; reason: string };
+export type ValidateMoveResult = { valid: true } | { valid: false; reason: string };
 
 /**
  * Determine whether a move from `fromArticle` to `toArticle` is permitted

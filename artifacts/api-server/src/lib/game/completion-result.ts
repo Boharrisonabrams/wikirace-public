@@ -31,11 +31,7 @@ export function deriveCompletionOutcome(options: {
     gaveUp: options.gaveUp,
     won:
       !options.gaveUp &&
-      titleMatchesTarget(
-        options.lastArticle,
-        options.targetArticle,
-        options.targetAliases,
-      ),
+      titleMatchesTarget(options.lastArticle, options.targetArticle, options.targetAliases),
   };
 }
 
@@ -93,15 +89,11 @@ function orderingTime(value: string | null | undefined): number {
   return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER;
 }
 
-function compareShortestRuns(
-  left: ShortestLeaderboardRow,
-  right: ShortestLeaderboardRow,
-): number {
+function compareShortestRuns(left: ShortestLeaderboardRow, right: ShortestLeaderboardRow): number {
   const clickDelta = orderingNumber(left.clicks) - orderingNumber(right.clicks);
   if (clickDelta !== 0) return clickDelta;
 
-  const activeDelta =
-    orderingNumber(left.active_time_ms) - orderingNumber(right.active_time_ms);
+  const activeDelta = orderingNumber(left.active_time_ms) - orderingNumber(right.active_time_ms);
   if (activeDelta !== 0) return activeDelta;
 
   return orderingTime(left.completed_at) - orderingTime(right.completed_at);
@@ -112,9 +104,8 @@ export function deriveWouldBeShortestRank(options: {
   session: ShortestLeaderboardRow;
 }): number {
   return (
-    options.leaderboard.filter(
-      (entry) => compareShortestRuns(entry, options.session) < 0,
-    ).length + 1
+    options.leaderboard.filter((entry) => compareShortestRuns(entry, options.session) < 0).length +
+    1
   );
 }
 
@@ -142,11 +133,7 @@ export async function loadCompletionResultContext({
         .select("challenge_date, difficulty, difficulty_source")
         .eq("id", session.challenge_id)
         .single(),
-      admin
-        .from("profiles")
-        .select("claimed_at")
-        .eq("id", session.user_id)
-        .maybeSingle(),
+      admin.from("profiles").select("claimed_at").eq("id", session.user_id).maybeSingle(),
     ]);
     const challenge = challengeResult.data;
     const claimed = Boolean(profileResult.data?.claimed_at);
@@ -201,15 +188,9 @@ export async function loadCompletionResultContext({
 
     return {
       ...context,
-      eligibleCount: rankResult.error
-        ? null
-        : positiveCount(playerRanks?.eligible_count),
-      shortestRank: rankResult.error
-        ? null
-        : positiveRank(playerRanks?.shortest_rank),
-      fastestRank: rankResult.error
-        ? null
-        : positiveRank(playerRanks?.fastest_rank),
+      eligibleCount: rankResult.error ? null : positiveCount(playerRanks?.eligible_count),
+      shortestRank: rankResult.error ? null : positiveRank(playerRanks?.shortest_rank),
+      fastestRank: rankResult.error ? null : positiveRank(playerRanks?.fastest_rank),
     };
   } catch {
     return {

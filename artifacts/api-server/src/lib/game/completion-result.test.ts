@@ -14,7 +14,7 @@ describe("completion outcome", () => {
         gaveUp: true,
         lastArticle: "Violin",
         targetArticle: "Violin",
-      }),
+      })
     ).toEqual({ gaveUp: true, won: false });
   });
 
@@ -24,14 +24,14 @@ describe("completion outcome", () => {
         gaveUp: false,
         lastArticle: "Violin",
         targetArticle: "Violin",
-      }),
+      })
     ).toEqual({ gaveUp: false, won: true });
     expect(
       deriveCompletionOutcome({
         gaveUp: false,
         lastArticle: "Piano",
         targetArticle: "Violin",
-      }),
+      })
     ).toEqual({ gaveUp: false, won: false });
   });
 
@@ -42,35 +42,29 @@ describe("completion outcome", () => {
         lastArticle: "Tigers",
         targetArticle: "Tiger",
         targetAliases: ["Tigers"],
-      }),
+      })
     ).toEqual({ gaveUp: false, won: true });
     expect(
       deriveCompletionOutcome({
         gaveUp: false,
         lastArticle: "Tigers",
         targetArticle: "Tiger",
-      }),
+      })
     ).toEqual({ gaveUp: false, won: false });
   });
 });
 
 describe("official statistics eligibility", () => {
   it("records only the official Daily attempt", () => {
-    expect(
-      recordsOfficialDailyStats({ challengeType: "daily", isOfficial: true }),
-    ).toBe(true);
-    expect(
-      recordsOfficialDailyStats({ challengeType: "daily", isOfficial: false }),
-    ).toBe(false);
+    expect(recordsOfficialDailyStats({ challengeType: "daily", isOfficial: true })).toBe(true);
+    expect(recordsOfficialDailyStats({ challengeType: "daily", isOfficial: false })).toBe(false);
     expect(
       recordsOfficialDailyStats({
         challengeType: "practice",
         isOfficial: true,
-      }),
+      })
     ).toBe(false);
-    expect(
-      recordsOfficialDailyStats({ challengeType: "friend", isOfficial: true }),
-    ).toBe(false);
+    expect(recordsOfficialDailyStats({ challengeType: "friend", isOfficial: true })).toBe(false);
   });
 });
 
@@ -95,7 +89,7 @@ describe("deriveWouldBeShortestRank", () => {
           clicks: 3,
           completed_at: "2026-07-24T08:10:00.000Z",
         },
-      }),
+      })
     ).toBe(2);
   });
 
@@ -119,7 +113,7 @@ describe("deriveWouldBeShortestRank", () => {
           clicks: 5,
           completed_at: "2026-07-24T08:10:00.000Z",
         },
-      }),
+      })
     ).toBe(3);
   });
 
@@ -143,7 +137,7 @@ describe("deriveWouldBeShortestRank", () => {
           clicks: 3,
           completed_at: "2026-07-24T08:10:00.000Z",
         },
-      }),
+      })
     ).toBe(3);
   });
 });
@@ -220,7 +214,7 @@ describe("loadCompletionResultContext", () => {
           won: true,
         },
         user: { id: "guest-1", is_anonymous: true } as never,
-      }),
+      })
     ).resolves.toMatchObject({
       claimed: false,
       eligibleCount: null,
@@ -237,9 +231,6 @@ describe("loadCompletionResultContext", () => {
       p_limit: 1000,
       p_offset: 0,
     });
-    expect(rpc).not.toHaveBeenCalledWith(
-      "get_daily_player_ranks",
-      expect.anything(),
-    );
+    expect(rpc).not.toHaveBeenCalledWith("get_daily_player_ranks", expect.anything());
   });
 });
