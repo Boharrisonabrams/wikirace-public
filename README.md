@@ -83,7 +83,7 @@ Bo kept these for himself:
 ## Known gaps
 
 - `artifacts/mobile/src/lib` and `artifacts/web/src/lib` share 17 same-named files. `active-timer.ts` and `username.ts` are byte-identical, and `game-search.ts` differs by 47 diff lines. `lib/share-intent` already shows the shared-package fix.
-- CI skips the web Vitest units, Playwright, and pgTAP. The API concurrency test mocks Supabase, so only the local pgTAP run proves database atomicity.
+- CI now runs the web Vitest units and the four pgTAP suites in the Tests workflow, and the Lint workflow runs ESLint, Prettier, and the typecheck. Playwright still does not run in CI. The API concurrency test mocks Supabase, so the pgTAP run is what proves database atomicity.
 - Template leftovers remain: `lib/db`, `lib/api-spec` and `lib/api-zod` (they describe only `/healthz`), `lib/api-client-react`, `scripts/src/hello.ts`, Replit Vite plugins in the web config, and the Expo starter README and LICENSE in `artifacts/mobile`.
 - Four mobile screens run past 1,100 lines and `reminders.ts` is 1,184 lines. `routes/game.ts` has a long `/game/start` handler and `any`-typed sessions. There is no root lint or format config.
 - Some docs are stale: `docs/ai/task.md` is an early brief, and `artifacts/mobile/AGENTS.md` points at Expo SDK 57 docs while the app pins SDK 54.
