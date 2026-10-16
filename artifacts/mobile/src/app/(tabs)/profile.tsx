@@ -19,10 +19,13 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import {
   EditorialCard,
-  PrimaryAction,
   SecondaryAction,
   SectionHeading,
 } from "@/components/editorial-ui";
+import { ProfileAccountSection } from "@/components/profile/profile-account-section";
+import { ProfileFriendLists } from "@/components/profile/profile-friend-lists";
+import { ProfileIdentitySection } from "@/components/profile/profile-identity-section";
+import { ProfileRecordSection } from "@/components/profile/profile-record-section";
 import { useAppTheme, type AppTheme } from "@/hooks/use-app-theme";
 import {
   deleteAccount,
@@ -32,7 +35,6 @@ import {
   respondToFriendRequest,
   updateUsername,
 } from "@/lib/api";
-import { formatTime } from "@/lib/game-utils";
 import {
   canSendFriendRequest,
   normalizeFriendCode,
@@ -392,190 +394,24 @@ export default function ProfileScreen() {
           </View>
         ) : profile ? (
           <>
-            <View style={styles.section}>
-              <SectionHeading
-                editAccessibilityLabel="Edit username"
-                onEditPress={beginUsernameEdit}
-                title="Identity"
-              />
-              <EditorialCard style={styles.card}>
-                <View style={styles.identityHeader}>
-                  <View style={styles.identityCopy}>
-                    <Text selectable style={styles.profileName}>
-                      {profile.displayName || profile.username}
-                    </Text>
-                    <Text selectable style={styles.username}>
-                      @{profile.username}
-                    </Text>
-                  </View>
-                  <Pressable
-                    accessibilityLabel="Edit username"
-                    accessibilityRole="button"
-                    disabled={usernameSaving}
-                    onPress={beginUsernameEdit}
-                    style={({ pressed }) => [
-                      styles.editButton,
-                      pressed && styles.pressed,
-                      usernameSaving && styles.disabled,
-                    ]}
-                  >
-                    <Text style={styles.editButtonText}>Edit</Text>
-                  </Pressable>
-                </View>
-                <View style={styles.accountStatus}>
-                  <Feather
-                    accessibilityElementsHidden
-                    color={profile.claimed ? colors.success : colors.warning}
-                    importantForAccessibility="no-hide-descendants"
-                    name={profile.claimed ? "check-circle" : "clock"}
-                    size={14}
-                  />
-                  <Text style={styles.accountStatusText}>
-                    {profile.claimed ? "Saved account" : "Guest profile"}
-                  </Text>
-                </View>
-
-                {editingUsername ? (
-                  <View style={styles.usernameEditor}>
-                    <Text style={styles.cardTitle}>Change username</Text>
-                    <Text style={styles.cardCopy}>
-                      Lowercase letters, numbers, and underscores only.
-                    </Text>
-                    <TextInput
-                      accessibilityLabel="Username"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                      editable={!usernameSaving}
-                      onChangeText={setUsernameInput}
-                      onSubmitEditing={() => void saveUsername()}
-                      placeholder="player_one"
-                      placeholderTextColor={colors.inkMuted}
-                      returnKeyType="done"
-                      selectionColor={colors.accent}
-                      style={styles.usernameInput}
-                      value={usernameInput}
-                    />
-                    {usernameError || usernameValidationError ? (
-                      <Text style={styles.usernameErrorText}>
-                        {usernameError ?? usernameValidationError}
-                      </Text>
-                    ) : (
-                      <Text style={styles.usernameHint}>
-                        Save to update your handle everywhere your profile
-                        appears.
-                      </Text>
-                    )}
-                    <View style={styles.usernameActions}>
-                      <Pressable
-                        accessibilityLabel="Save username"
-                        accessibilityRole="button"
-                        accessibilityState={{
-                          busy: usernameSaving,
-                          disabled: !canSaveUsername,
-                        }}
-                        disabled={!canSaveUsername}
-                        onPress={() => void saveUsername()}
-                        style={({ pressed }) => [
-                          styles.saveButton,
-                          pressed && styles.pressed,
-                          !canSaveUsername && styles.disabled,
-                        ]}
-                      >
-                        {usernameSaving ? (
-                          <ActivityIndicator
-                            color={colors.onAccent}
-                            size="small"
-                          />
-                        ) : (
-                          <Text style={styles.saveButtonText}>Save</Text>
-                        )}
-                      </Pressable>
-                      <Pressable
-                        accessibilityLabel="Cancel username edit"
-                        accessibilityRole="button"
-                        disabled={usernameSaving}
-                        onPress={cancelUsernameEdit}
-                        style={({ pressed }) => [
-                          styles.cancelButton,
-                          pressed && styles.pressed,
-                          usernameSaving && styles.disabled,
-                        ]}
-                      >
-                        <Text style={styles.cancelButtonText}>Cancel</Text>
-                      </Pressable>
-                    </View>
-                  </View>
-                ) : null}
-
-                {profile.claimed ? (
-                  <Pressable
-                    accessibilityLabel={`Copy friend code ${profile.friendCode}`}
-                    accessibilityRole="button"
-                    onPress={() => void copyFriendCode()}
-                    style={({ pressed }) => [
-                      styles.friendCode,
-                      pressed && styles.pressed,
-                    ]}
-                  >
-                    <View>
-                      <Text style={styles.friendCodeLabel}>FRIEND CODE</Text>
-                      <Text style={styles.friendCodeHint}>
-                        Share this with a rival.
-                      </Text>
-                    </View>
-                    <View style={styles.friendCodeValueRow}>
-                      <Text selectable style={styles.friendCodeValue}>
-                        {profile.friendCode}
-                      </Text>
-                      <Feather
-                        color={copied ? colors.success : colors.link}
-                        name={copied ? "check" : "copy"}
-                        size={17}
-                      />
-                    </View>
-                  </Pressable>
-                ) : (
-                  <PrimaryAction
-                    icon="user-plus"
-                    label="Save this guest profile"
-                    onPress={() =>
-                      router.push({
-                        pathname: "/signup",
-                        params: { mode: "claim", next: "/profile" },
-                      })
-                    }
-                  />
-                )}
-              </EditorialCard>
-            </View>
+            <ProfileIdentitySection
+              canSaveUsername={canSaveUsername}
+              copied={copied}
+              editingUsername={editingUsername}
+              onBeginEdit={beginUsernameEdit}
+              onCancelEdit={cancelUsernameEdit}
+              onChangeUsername={setUsernameInput}
+              onCopyFriendCode={() => void copyFriendCode()}
+              onSaveUsername={() => void saveUsername()}
+              profile={profile}
+              usernameError={usernameError}
+              usernameInput={usernameInput}
+              usernameSaving={usernameSaving}
+              usernameValidationError={usernameValidationError}
+            />
 
             {stats ? (
-              <View style={styles.section}>
-                <SectionHeading title="Record" />
-                <EditorialCard style={styles.statsGrid}>
-                  <StatCell label="Played" value={String(stats.gamesPlayed)} />
-                  <StatCell label="Won" value={String(stats.gamesWon)} />
-                  <StatCell label="Win rate" value={`${winRate}%`} />
-                  <StatCell
-                    label="Best path"
-                    value={
-                      stats.bestClicks == null ? "—" : String(stats.bestClicks)
-                    }
-                  />
-                  <StatCell
-                    label="Fastest"
-                    value={
-                      stats.fastestTimeMs == null
-                        ? "—"
-                        : formatTime(Math.round(stats.fastestTimeMs / 1_000))
-                    }
-                  />
-                  <StatCell
-                    label="Streak"
-                    value={String(stats.currentStreak)}
-                  />
-                </EditorialCard>
-              </View>
+              <ProfileRecordSection stats={stats} winRate={winRate} />
             ) : null}
 
             {profile.claimed ? (
@@ -639,66 +475,11 @@ export default function ProfileScreen() {
                     </Pressable>
                   </View>
 
-                  {friends.pendingIncoming.length > 0 ? (
-                    <View style={styles.friendGroup}>
-                      <Text style={styles.groupLabel}>REQUESTS</Text>
-                      {friends.pendingIncoming.map((friend) => (
-                        <View key={friend.userId} style={styles.requestRow}>
-                          <View style={styles.friendIdentity}>
-                            <Text style={styles.friendName}>
-                              {friend.displayName || friend.username}
-                            </Text>
-                            <Text style={styles.friendUsername}>
-                              @{friend.username}
-                            </Text>
-                          </View>
-                          <View style={styles.requestActions}>
-                            <MiniAction
-                              disabled={respondingId !== null}
-                              label="Accept"
-                              onPress={() => void respond(friend, true)}
-                              primary
-                            />
-                            <MiniAction
-                              disabled={respondingId !== null}
-                              label="Decline"
-                              onPress={() => void respond(friend, false)}
-                            />
-                          </View>
-                        </View>
-                      ))}
-                    </View>
-                  ) : null}
-
-                  <View style={styles.friendGroup}>
-                    <Text style={styles.groupLabel}>YOUR FRIENDS</Text>
-                    {friends.friends.length === 0 ? (
-                      <Text style={styles.emptyText}>
-                        No friends yet. Share your code to start a private
-                        leaderboard.
-                      </Text>
-                    ) : (
-                      friends.friends.map((friend) => (
-                        <View key={friend.userId} style={styles.friendRow}>
-                          <View style={styles.onlineDot} />
-                          <Text style={styles.friendName}>
-                            {friend.displayName || friend.username}
-                          </Text>
-                          <Text style={styles.friendUsername}>
-                            @{friend.username}
-                          </Text>
-                        </View>
-                      ))
-                    )}
-                    {friends.pendingOutgoing.length > 0 ? (
-                      <Text style={styles.pendingText}>
-                        Waiting on{" "}
-                        {friends.pendingOutgoing
-                          .map((friend) => `@${friend.username}`)
-                          .join(", ")}
-                      </Text>
-                    ) : null}
-                  </View>
+                  <ProfileFriendLists
+                    friends={friends}
+                    onRespond={respond}
+                    respondingId={respondingId}
+                  />
                 </EditorialCard>
               </View>
             ) : null}
@@ -762,100 +543,17 @@ export default function ProfileScreen() {
               </EditorialCard>
             </View>
 
-            <View style={styles.section}>
-              <SectionHeading title="Account" />
-              <EditorialCard style={styles.card}>
-                {profile.claimed ? (
-                  <Pressable
-                    accessibilityLabel="Sign out"
-                    accessibilityRole="button"
-                    onPress={() => void signOut()}
-                    style={({ pressed }) => [
-                      styles.accountButton,
-                      pressed && styles.pressed,
-                    ]}
-                  >
-                    <Feather color={colors.link} name="log-out" size={16} />
-                    <Text style={styles.accountButtonText}>Sign out</Text>
-                  </Pressable>
-                ) : null}
-                <Text style={styles.deleteCopy}>
-                  {profileDeletionDescription()}
-                </Text>
-                <Pressable
-                  accessibilityLabel="Delete account"
-                  accessibilityRole="button"
-                  accessibilityState={{ busy: deleting, disabled: deleting }}
-                  disabled={deleting}
-                  onPress={confirmDeletion}
-                  style={({ pressed }) => [
-                    styles.deleteButton,
-                    pressed && styles.pressed,
-                    deleting && styles.disabled,
-                  ]}
-                >
-                  {deleting ? (
-                    <ActivityIndicator color={colors.danger} size="small" />
-                  ) : (
-                    <Feather color={colors.danger} name="trash-2" size={16} />
-                  )}
-                  <Text style={styles.deleteButtonText}>Delete account</Text>
-                </Pressable>
-              </EditorialCard>
-            </View>
+            <ProfileAccountSection
+              deleting={deleting}
+              onConfirmDeletion={confirmDeletion}
+              onSignOut={() => void signOut()}
+              profile={profile}
+            />
           </>
         ) : null}
       </ScrollView>
     </View>
   );
-
-  function StatCell({ label, value }: { label: string; value: string }) {
-    return (
-      <View style={styles.statCell}>
-        <Text selectable style={styles.statValue}>
-          {value}
-        </Text>
-        <Text style={styles.statLabel}>{label}</Text>
-      </View>
-    );
-  }
-
-  function MiniAction({
-    disabled,
-    label,
-    onPress,
-    primary,
-  }: {
-    disabled: boolean;
-    label: string;
-    onPress: () => void;
-    primary?: boolean;
-  }) {
-    return (
-      <Pressable
-        accessibilityLabel={`${label} friend request`}
-        accessibilityRole="button"
-        accessibilityState={{ disabled }}
-        disabled={disabled}
-        onPress={onPress}
-        style={({ pressed }) => [
-          styles.miniAction,
-          primary && styles.miniActionPrimary,
-          pressed && styles.pressed,
-          disabled && styles.disabled,
-        ]}
-      >
-        <Text
-          style={[
-            styles.miniActionText,
-            primary && styles.miniActionPrimaryText,
-          ]}
-        >
-          {label}
-        </Text>
-      </Pressable>
-    );
-  }
 
   function LinkRow({
     icon,
@@ -945,154 +643,6 @@ function makeStyles({ colors, fonts }: AppTheme, topPadding: number) {
       fontSize: 13,
       lineHeight: 19,
     },
-    profileName: {
-      color: colors.inkStrong,
-      fontFamily: fonts.serif,
-      fontSize: 24,
-      lineHeight: 30,
-    },
-    identityHeader: {
-      alignItems: "flex-start",
-      flexDirection: "row",
-      gap: 10,
-      justifyContent: "space-between",
-    },
-    identityCopy: { flex: 1, gap: 1 },
-    username: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sans,
-      fontSize: 13,
-      marginTop: -9,
-    },
-    editButton: {
-      borderColor: colors.border,
-      borderWidth: 1,
-      justifyContent: "center",
-      minHeight: 38,
-      paddingHorizontal: 12,
-    },
-    editButtonText: {
-      color: colors.link,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 13,
-    },
-    accountStatus: { alignItems: "center", flexDirection: "row", gap: 6 },
-    accountStatusText: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sansMedium,
-      fontSize: 12,
-    },
-    usernameEditor: {
-      borderTopColor: colors.borderSoft,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      gap: 9,
-      paddingTop: 13,
-    },
-    usernameInput: {
-      backgroundColor: colors.surface,
-      borderColor: colors.border,
-      borderWidth: 1,
-      color: colors.inkStrong,
-      fontFamily: fonts.sans,
-      fontSize: 15,
-      minHeight: 48,
-      paddingHorizontal: 12,
-    },
-    usernameHint: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sans,
-      fontSize: 12,
-      lineHeight: 18,
-    },
-    usernameErrorText: {
-      color: colors.danger,
-      fontFamily: fonts.sans,
-      fontSize: 12,
-      lineHeight: 18,
-    },
-    usernameActions: { flexDirection: "row", gap: 8 },
-    saveButton: {
-      alignItems: "center",
-      backgroundColor: colors.accent,
-      flex: 1,
-      justifyContent: "center",
-      minHeight: 44,
-      paddingHorizontal: 12,
-    },
-    saveButtonText: {
-      color: colors.onAccent,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 14,
-    },
-    cancelButton: {
-      alignItems: "center",
-      borderColor: colors.border,
-      borderWidth: 1,
-      justifyContent: "center",
-      minHeight: 44,
-      paddingHorizontal: 14,
-    },
-    cancelButtonText: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 14,
-    },
-    friendCode: {
-      alignItems: "center",
-      backgroundColor: colors.surfaceMuted,
-      borderColor: colors.border,
-      borderStyle: "dashed",
-      borderWidth: 1,
-      flexDirection: "row",
-      justifyContent: "space-between",
-      minHeight: 66,
-      paddingHorizontal: 13,
-      paddingVertical: 10,
-    },
-    friendCodeLabel: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 10,
-      letterSpacing: 1.2,
-    },
-    friendCodeHint: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sans,
-      fontSize: 11,
-      marginTop: 2,
-    },
-    friendCodeValueRow: { alignItems: "center", flexDirection: "row", gap: 9 },
-    friendCodeValue: {
-      color: colors.inkStrong,
-      fontFamily: fonts.mono,
-      fontSize: 18,
-      fontWeight: "700",
-      letterSpacing: 2.2,
-    },
-    statsGrid: { flexDirection: "row", flexWrap: "wrap" },
-    statCell: {
-      alignItems: "center",
-      borderBottomColor: colors.borderSoft,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderRightColor: colors.borderSoft,
-      borderRightWidth: StyleSheet.hairlineWidth,
-      paddingHorizontal: 5,
-      paddingVertical: 13,
-      width: "33.333%",
-    },
-    statValue: {
-      color: colors.inkStrong,
-      fontFamily: fonts.serif,
-      fontSize: 20,
-      lineHeight: 25,
-    },
-    statLabel: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sansMedium,
-      fontSize: 10,
-      letterSpacing: 0.5,
-      textTransform: "uppercase",
-    },
     cardTitle: {
       color: colors.inkStrong,
       fontFamily: fonts.serif,
@@ -1134,72 +684,6 @@ function makeStyles({ colors, fonts }: AppTheme, topPadding: number) {
       fontFamily: fonts.sansSemiBold,
       fontSize: 14,
     },
-    friendGroup: {
-      borderTopColor: colors.borderSoft,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      gap: 9,
-      paddingTop: 13,
-    },
-    groupLabel: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 10,
-      letterSpacing: 1.1,
-    },
-    requestRow: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: 8,
-      justifyContent: "space-between",
-    },
-    friendIdentity: { flex: 1 },
-    friendName: {
-      color: colors.inkStrong,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 13,
-    },
-    friendUsername: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sans,
-      fontSize: 12,
-    },
-    requestActions: { flexDirection: "row", gap: 6 },
-    miniAction: {
-      borderColor: colors.border,
-      borderWidth: 1,
-      minHeight: 38,
-      paddingHorizontal: 10,
-      justifyContent: "center",
-    },
-    miniActionPrimary: {
-      backgroundColor: colors.accent,
-      borderColor: colors.accent,
-    },
-    miniActionText: {
-      color: colors.link,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 12,
-    },
-    miniActionPrimaryText: { color: colors.onAccent },
-    friendRow: { alignItems: "center", flexDirection: "row", gap: 7 },
-    onlineDot: {
-      backgroundColor: colors.success,
-      borderRadius: 3,
-      height: 6,
-      width: 6,
-    },
-    emptyText: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sans,
-      fontSize: 13,
-      lineHeight: 19,
-    },
-    pendingText: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sans,
-      fontSize: 11,
-      lineHeight: 17,
-    },
     reminderNote: {
       color: colors.inkMuted,
       fontFamily: fonts.sans,
@@ -1220,40 +704,6 @@ function makeStyles({ colors, fonts }: AppTheme, topPadding: number) {
       color: colors.link,
       flex: 1,
       fontFamily: fonts.sansMedium,
-      fontSize: 14,
-    },
-    accountButton: {
-      alignItems: "center",
-      borderColor: colors.border,
-      borderWidth: 1,
-      flexDirection: "row",
-      gap: 8,
-      justifyContent: "center",
-      minHeight: 46,
-    },
-    accountButtonText: {
-      color: colors.link,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 14,
-    },
-    deleteCopy: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sans,
-      fontSize: 12,
-      lineHeight: 18,
-    },
-    deleteButton: {
-      alignItems: "center",
-      borderColor: colors.danger,
-      borderWidth: 1,
-      flexDirection: "row",
-      gap: 8,
-      justifyContent: "center",
-      minHeight: 46,
-    },
-    deleteButtonText: {
-      color: colors.danger,
-      fontFamily: fonts.sansSemiBold,
       fontSize: 14,
     },
     disabled: { opacity: 0.5 },

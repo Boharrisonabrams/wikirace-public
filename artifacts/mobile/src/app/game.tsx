@@ -1,12 +1,8 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { randomUUID } from "expo-crypto";
 import * as Haptics from "expo-haptics";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
-  AppState,
   Keyboard,
   KeyboardAvoidingView,
   Modal,
@@ -16,32 +12,19 @@ import {
   Text,
   TextInput,
   View,
-  type AppStateStatus,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import WebView, { type WebViewMessageEvent } from "react-native-webview";
 
-import { GamePathMap } from "@/components/game-path-map";
 import { GameSearchSheet } from "@/components/game-search-sheet";
+import { GameActionBar } from "@/components/game/game-action-bar";
+import { GameArticleFrame } from "@/components/game/game-article-frame";
+import { GameHeader } from "@/components/game/game-header";
+import { GameLoadingView, GameStartError } from "@/components/game/game-status";
 import { useAppTheme, type AppTheme } from "@/hooks/use-app-theme";
 import { useAuthSession } from "@/hooks/use-auth-session";
-import {
-  completeGame,
-  getArticle,
-  navigateGame,
-  startGame,
-  transitionGameTiming,
-} from "@/lib/api";
-import {
-  createActiveTimerState,
-  createTimingRequestCoordinator,
-  displayedActiveTimeMs,
-  reconcileActiveTimer,
-  reduceActiveTimer,
-  type ActiveTimerEvent,
-  type ClientTimingAction,
-  type TimingSessionToken,
-} from "@/lib/active-timer";
+import { useGameActiveTimer } from "@/hooks/use-game-active-timer";
+import { completeGame, getArticle, navigateGame, startGame } from "@/lib/api";
 import {
   applyArticleFindEvent,
   buildArticleFindPresentation,
@@ -64,7 +47,6 @@ import {
 import { articleShell } from "@/lib/article-shell";
 import { buildInternalReturnPath } from "@/lib/auth-flow";
 import { deviceTimeZone } from "@/lib/daily-context";
-import { formatTime } from "@/lib/game-utils";
 import {
   allowsArticleBack,
   createResultCompletionCoordinator,
@@ -175,7 +157,8 @@ export default function GameScreen() {
   const [moving, setMoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [activeTimeMs, setActiveTimeMs] = useState(0);
+  const { activeTimeMs, applyTimerEvent, installSessionTimer, sessionRef } =
+    useGameActiveTimer(session?.id);
   const [searchMode, setSearchMode] = useState<SearchSheetMode>("closed");
   const [showTargetInfo, setShowTargetInfo] = useState(false);
   const [findPending, setFindPending] = useState(false);
@@ -185,15 +168,8 @@ export default function GameScreen() {
     null,
   );
   const [keyboardShown, setKeyboardShown] = useState(false);
-  const sessionRef = useRef<GameSession | null>(null);
-  const timerStateRef = useRef(
-    createActiveTimerState({ appActive: AppState.currentState === "active" }),
-  );
-  const timingCoordinatorRef = useRef(createTimingRequestCoordinator());
-  const timingSessionTokenRef = useRef<TimingSessionToken | null>(null);
   const pendingTargetResultRef = useRef<GameSession | null>(null);
   const pendingGiveUpResultRef = useRef<GameSession | null>(null);
-  const mountedRef = useRef(true);
   const targetCompletionCoordinatorRef = useRef(
     createResultCompletionCoordinator({
       complete: async (sessionId) => {
@@ -304,74 +280,6 @@ export default function GameScreen() {
     setFindSnippets([]);
   }, []);
 
-  function refreshTimerDisplay(nowMs = Date.now()) {
-    if (!mountedRef.current) return;
-    setActiveTimeMs(displayedActiveTimeMs(timerStateRef.current, nowMs));
-  }
-
-  function enqueueTimingAction(
-    token: TimingSessionToken,
-    action: ClientTimingAction,
-  ): Promise<void> {
-    return timingCoordinatorRef.current.enqueue({
-      token,
-      request: () =>
-        transitionGameTiming({
-          sessionId: token.sessionId,
-          action,
-          eventId: randomUUID(),
-        }),
-      onResponse: (server) => {
-        timerStateRef.current = reconcileActiveTimer(
-          timerStateRef.current,
-          server,
-          Date.now(),
-        );
-        refreshTimerDisplay();
-      },
-      onError: () => {
-        const current = timerStateRef.current;
-        timerStateRef.current = {
-          ...current,
-          activeTimeMs: displayedActiveTimeMs(current, Date.now()),
-          activeSinceMs: null,
-          lastHeartbeatAtMs: null,
-          timingActive: false,
-        };
-        refreshTimerDisplay();
-      },
-    });
-  }
-
-  function applyTimerEvent(event: ActiveTimerEvent): Promise<void> {
-    const decision = reduceActiveTimer(timerStateRef.current, event);
-    timerStateRef.current = decision.state;
-    refreshTimerDisplay(event.nowMs);
-    const token = timingSessionTokenRef.current;
-    return decision.action && token
-      ? enqueueTimingAction(token, decision.action)
-      : Promise.resolve();
-  }
-
-  function installSessionTimer(nextSession: GameSession) {
-    const nowMs = Date.now();
-    const appActive = timerStateRef.current.appActive;
-    sessionRef.current = nextSession;
-    timingSessionTokenRef.current = timingCoordinatorRef.current.beginSession(
-      nextSession.id,
-    );
-    timerStateRef.current = createActiveTimerState({
-      activeTimeMs: nextSession.activeTimeMs,
-      appActive,
-      timingActive: nextSession.timingActive,
-      nowMs,
-    });
-    refreshTimerDisplay(nowMs);
-    if (nextSession.timingActive) {
-      void applyTimerEvent({ type: "article-loading", nowMs });
-    }
-  }
-
   useEffect(() => {
     resetFind();
     setLinkInventory(null);
@@ -412,19 +320,6 @@ export default function GameScreen() {
     searchMode,
     shell,
   ]);
-
-  useEffect(() => {
-    const onAppStateChange = (nextState: AppStateStatus) => {
-      void applyTimerEvent({
-        type: "app-state",
-        appActive: nextState === "active",
-        nowMs: Date.now(),
-      });
-    };
-    const subscription = AppState.addEventListener("change", onAppStateChange);
-    onAppStateChange(AppState.currentState);
-    return () => subscription.remove();
-  }, []);
 
   useEffect(() => {
     if (authLoading) return;
@@ -534,44 +429,6 @@ export default function GameScreen() {
       cancelled = true;
     };
   }, [currentArticle, session?.id]);
-
-  useEffect(() => {
-    if (!session?.id) return;
-    const timer = setInterval(() => {
-      const nowMs = Date.now();
-      refreshTimerDisplay(nowMs);
-      void applyTimerEvent({ type: "heartbeat-tick", nowMs });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [session?.id]);
-
-  useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-      const currentSession = sessionRef.current;
-      const timingToken = timingSessionTokenRef.current;
-      const decision = reduceActiveTimer(timerStateRef.current, {
-        type: "screen-exit",
-        nowMs: Date.now(),
-      });
-      timerStateRef.current = decision.state;
-      timingSessionTokenRef.current = null;
-      if (currentSession && timingToken) {
-        void timingCoordinatorRef.current
-          .finalizeSession({
-            token: timingToken,
-            request: () =>
-              transitionGameTiming({
-                sessionId: currentSession.id,
-                action: "pause",
-                eventId: randomUUID(),
-              }),
-          })
-          .catch(() => undefined);
-      }
-    };
-  }, []);
 
   function openSearch() {
     setSearchMode("expanded");
@@ -827,33 +684,11 @@ export default function GameScreen() {
   }
 
   if (authLoading || starting) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator color={colors.accent} />
-        <Text selectable style={styles.centeredText}>
-          Loading race...
-        </Text>
-      </View>
-    );
+    return <GameLoadingView />;
   }
 
   if (error && !session) {
-    return (
-      <View style={styles.centered}>
-        <Text selectable style={styles.errorText}>
-          {error}
-        </Text>
-        <Pressable
-          accessibilityLabel="Back home"
-          accessibilityRole="button"
-          role="button"
-          onPress={() => router.dismissTo("/")}
-          style={styles.secondaryButton}
-        >
-          <Text style={styles.secondaryButtonText}>Back home</Text>
-        </Pressable>
-      </View>
-    );
+    return <GameStartError error={error} />;
   }
 
   return (
@@ -862,118 +697,31 @@ export default function GameScreen() {
       style={styles.container}
     >
       <Stack.Screen options={{ gestureEnabled: false, headerShown: false }} />
-      <View
-        style={[styles.chrome, { paddingTop: Math.max(insets.top, 8) + 4 }]}
-      >
-        <View style={styles.headerTopRow}>
-          <View style={styles.headerControls}>
-            <Pressable
-              accessibilityHint="Returns Home. Use Give up to end this race."
-              accessibilityLabel="Exit race"
-              accessibilityRole="button"
-              role="button"
-              disabled={moving}
-              hitSlop={4}
-              onPress={() => void exitGame()}
-              style={({ pressed }) => [
-                styles.exitButton,
-                pressed && styles.pressed,
-                moving && styles.disabled,
-              ]}
-            >
-              <Ionicons color={colors.ink} name="close" size={22} />
-            </Pressable>
-          </View>
-          <View style={styles.headerStatus}>
-            <Text style={styles.attemptBadge}>{attemptLabel}</Text>
-            <Text
-              accessibilityLabel={`${screenTitle}. ${attemptLabel}. ${session?.clicks ?? 0} ${
-                session?.clicks === 1 ? "click" : "clicks"
-              }. Active time ${formatTime(Math.floor(activeTimeMs / 1_000))}.`}
-              selectable
-              style={styles.headerMeta}
-            >
-              {session?.clicks ?? 0}{" "}
-              {session?.clicks === 1 ? "click" : "clicks"}
-              {" · Active "}
-              {formatTime(Math.floor(activeTimeMs / 1_000))}
-            </Text>
-          </View>
-        </View>
+      <GameHeader
+        activeTimeMs={activeTimeMs}
+        attemptLabel={attemptLabel}
+        insets={insets}
+        moving={moving}
+        notice={notice}
+        onExit={() => void exitGame()}
+        onTargetPress={() => setShowTargetInfo(true)}
+        screenTitle={screenTitle}
+        searchMode={searchMode}
+        session={session}
+      />
 
-        <GamePathMap
-          compact={searchMode !== "closed"}
-          onTargetPress={() => setShowTargetInfo(true)}
-          path={session?.path ?? []}
-          targetDescription={session?.endDescription ?? null}
-          target={session?.endArticle ?? "Target"}
-        />
-
-        {notice ? (
-          <Text selectable style={styles.notice}>
-            {notice}
-          </Text>
-        ) : null}
-      </View>
-
-      <View style={styles.articleFrame}>
-        {articleLoading || !shell ? (
-          <View style={styles.articleLoading}>
-            <ActivityIndicator color={colors.accent} />
-            <Text selectable style={styles.centeredText}>
-              Loading article...
-            </Text>
-          </View>
-        ) : (
-          <WebView
-            bounces
-            decelerationRate="normal"
-            directionalLockEnabled
-            ref={webViewRef}
-            key={`${activeDocumentId}:${isDark ? "dark" : "light"}`}
-            javaScriptEnabled
-            nestedScrollEnabled
-            originWhitelist={["*"]}
-            source={{ html: shell }}
-            onLoadEnd={handleArticleLoad}
-            onMessage={handleArticleMessage}
-            onShouldStartLoadWithRequest={(request) =>
-              request.url === "about:blank" ||
-              request.url.startsWith("about:srcdoc")
-            }
-            overScrollMode="always"
-            scrollEnabled
-            showsVerticalScrollIndicator
-            startInLoadingState
-            style={styles.webview}
-          />
-        )}
-
-        {searchMode === "expanded" ? (
-          <Pressable
-            accessibilityLabel="Hide search results"
-            accessibilityRole="button"
-            onPress={collapseSearch}
-            role="button"
-            style={styles.searchScrim}
-            testID="search-scrim"
-          />
-        ) : null}
-
-        {moving ? (
-          <Pressable
-            accessibilityHint="Wait for the current move to finish."
-            accessibilityLabel="Move in progress"
-            onPress={() => setNotice(noticeForBlockedArticleTap())}
-            style={styles.movingOverlay}
-          >
-            <ActivityIndicator color={colors.accent} />
-            <Text selectable style={styles.movingOverlayText}>
-              Moving...
-            </Text>
-          </Pressable>
-        ) : null}
-      </View>
+      <GameArticleFrame
+        activeDocumentId={activeDocumentId}
+        articleLoading={articleLoading}
+        moving={moving}
+        onBlockedTap={() => setNotice(noticeForBlockedArticleTap())}
+        onCollapseSearch={collapseSearch}
+        onLoadEnd={handleArticleLoad}
+        onMessage={handleArticleMessage}
+        searchMode={searchMode}
+        shell={shell}
+        webViewRef={webViewRef}
+      />
 
       <Modal
         animationType="fade"
@@ -1001,71 +749,17 @@ export default function GameScreen() {
       </Modal>
 
       {searchMode === "closed" ? (
-        <View
-          style={[
-            styles.actionBar,
-            { paddingBottom: Math.max(insets.bottom, 8) },
-          ]}
-        >
-          {articleBackAllowed ? (
-            <Pressable
-              accessibilityHint="Returns to the previous article and counts as a click."
-              accessibilityLabel="Back one article"
-              accessibilityRole="button"
-              role="button"
-              disabled={!session || moving || session.path.length <= 1}
-              onPress={goBack}
-              style={({ pressed }) => [
-                styles.backButton,
-                pressed && styles.pressed,
-                (!session || moving || session.path.length <= 1) &&
-                  styles.disabled,
-              ]}
-            >
-              <Ionicons color={colors.ink} name="arrow-back" size={17} />
-              <Text style={styles.secondaryButtonText}>Back</Text>
-            </Pressable>
-          ) : null}
-          <Pressable
-            accessibilityHint={
-              findOnlySearch
-                ? "Find text inside this article."
-                : "Search this page’s links and text."
-            }
-            accessibilityLabel={
-              findOnlySearch ? "Find in this article" : "Search this page"
-            }
-            accessibilityRole="button"
-            role="button"
-            disabled={!session || articleLoading || moving}
-            onPress={openSearch}
-            style={({ pressed }) => [
-              styles.searchButton,
-              pressed && styles.pressed,
-              (!session || articleLoading || moving) && styles.disabled,
-            ]}
-            testID="search-open"
-          >
-            <Ionicons color={colors.onAccent} name="search" size={17} />
-            <Text style={styles.searchButtonText}>
-              {findOnlySearch ? "Find" : "Search"}
-            </Text>
-          </Pressable>
-          <Pressable
-            accessibilityLabel="Give up"
-            accessibilityRole="button"
-            role="button"
-            disabled={!session || moving}
-            onPress={giveUp}
-            style={({ pressed }) => [
-              styles.giveUpButton,
-              pressed && styles.pressed,
-              (!session || moving) && styles.disabled,
-            ]}
-          >
-            <Text style={styles.giveUpButtonText}>Give up</Text>
-          </Pressable>
-        </View>
+        <GameActionBar
+          articleBackAllowed={articleBackAllowed}
+          articleLoading={articleLoading}
+          findOnlySearch={findOnlySearch}
+          insets={insets}
+          moving={moving}
+          onBack={goBack}
+          onGiveUp={giveUp}
+          onOpenSearch={openSearch}
+          session={session}
+        />
       ) : (
         <View
           style={{
@@ -1096,119 +790,11 @@ export default function GameScreen() {
   );
 }
 
-function makeStyles({ colors, fonts, isDark, radius }: AppTheme) {
+function makeStyles({ colors, fonts }: AppTheme) {
   return StyleSheet.create({
     container: {
       backgroundColor: colors.chrome,
       flex: 1,
-    },
-    chrome: {
-      backgroundColor: colors.chrome,
-      borderBottomColor: colors.borderSoft,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      gap: 4,
-      paddingBottom: 9,
-    },
-    headerTopRow: {
-      alignItems: "center",
-      flexDirection: "row",
-      justifyContent: "space-between",
-      minHeight: 44,
-      paddingHorizontal: 14,
-    },
-    headerControls: {
-      alignItems: "center",
-      flexDirection: "row",
-      gap: 4,
-    },
-    exitButton: {
-      alignItems: "center",
-      height: 44,
-      justifyContent: "center",
-      marginLeft: -8,
-      width: 44,
-    },
-    headerStatus: {
-      alignItems: "flex-end",
-      gap: 3,
-    },
-    attemptBadge: {
-      backgroundColor: colors.accentSoft,
-      borderColor: colors.borderSoft,
-      borderRadius: radius.small,
-      borderWidth: 1,
-      color: colors.accent,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 9,
-      letterSpacing: 0.8,
-      overflow: "hidden",
-      paddingHorizontal: 7,
-      paddingVertical: 3,
-      textTransform: "uppercase",
-    },
-    headerMeta: {
-      color: colors.inkMuted,
-      fontFamily: fonts.mono,
-      fontSize: 12,
-      fontVariant: ["tabular-nums"],
-    },
-    notice: {
-      color: colors.danger,
-      fontFamily: fonts.sans,
-      fontSize: 12,
-      lineHeight: 17,
-      paddingHorizontal: 14,
-      paddingTop: 2,
-    },
-    secondaryButton: {
-      alignItems: "center",
-      backgroundColor: colors.surface,
-      borderColor: colors.border,
-      borderRadius: radius.medium,
-      borderWidth: 1,
-      justifyContent: "center",
-      minHeight: 44,
-      minWidth: 160,
-      paddingHorizontal: 14,
-    },
-    secondaryButtonText: {
-      color: colors.ink,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 14,
-    },
-    articleFrame: {
-      backgroundColor: colors.surface,
-      flex: 1,
-      position: "relative",
-    },
-    webview: {
-      backgroundColor: colors.surface,
-      flex: 1,
-    },
-    articleLoading: {
-      alignItems: "center",
-      flex: 1,
-      gap: 10,
-      justifyContent: "center",
-    },
-    movingOverlay: {
-      alignItems: "center",
-      backgroundColor: isDark
-        ? "rgba(0, 0, 0, 0.38)"
-        : "rgba(250, 247, 240, 0.48)",
-      bottom: 0,
-      justifyContent: "center",
-      left: 0,
-      position: "absolute",
-      right: 0,
-      top: 0,
-      zIndex: 20,
-    },
-    movingOverlayText: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 12,
-      marginTop: 10,
     },
     targetInfoBackdrop: {
       alignItems: "center",
@@ -1237,96 +823,6 @@ function makeStyles({ colors, fonts, isDark, radius }: AppTheme) {
       fontSize: 14,
       lineHeight: 20,
       marginTop: 8,
-    },
-    searchScrim: {
-      backgroundColor: colors.overlay,
-      bottom: 0,
-      left: 0,
-      position: "absolute",
-      right: 0,
-      top: 0,
-      zIndex: 10,
-    },
-    actionBar: {
-      alignItems: "center",
-      backgroundColor: colors.chrome,
-      borderTopColor: colors.borderSoft,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      flexDirection: "row",
-      gap: 8,
-      paddingHorizontal: 12,
-      paddingTop: 10,
-    },
-    backButton: {
-      alignItems: "center",
-      backgroundColor: colors.surface,
-      borderColor: colors.borderSoft,
-      borderRadius: radius.medium,
-      borderWidth: 1,
-      flex: 0.85,
-      flexDirection: "row",
-      gap: 6,
-      height: 48,
-      justifyContent: "center",
-      paddingHorizontal: 8,
-    },
-    searchButton: {
-      alignItems: "center",
-      backgroundColor: colors.accent,
-      borderRadius: radius.medium,
-      flex: 1.2,
-      flexDirection: "row",
-      gap: 7,
-      height: 48,
-      justifyContent: "center",
-      paddingHorizontal: 12,
-    },
-    searchButtonText: {
-      color: colors.onAccent,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 14,
-    },
-    giveUpButton: {
-      alignItems: "center",
-      backgroundColor: colors.surface,
-      borderColor: colors.border,
-      borderRadius: radius.medium,
-      borderWidth: 1,
-      flex: 0.8,
-      height: 48,
-      justifyContent: "center",
-      paddingHorizontal: 10,
-    },
-    giveUpButtonText: {
-      color: colors.ink,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 14,
-    },
-    centered: {
-      alignItems: "center",
-      backgroundColor: colors.chrome,
-      flex: 1,
-      gap: 12,
-      justifyContent: "center",
-      padding: 22,
-    },
-    centeredText: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sans,
-      fontSize: 14,
-    },
-    errorText: {
-      color: colors.danger,
-      fontFamily: fonts.sans,
-      fontSize: 15,
-      lineHeight: 22,
-      textAlign: "center",
-    },
-    pressed: {
-      opacity: 0.72,
-    },
-    disabled: {
-      opacity: 0.45,
     },
   });
 }

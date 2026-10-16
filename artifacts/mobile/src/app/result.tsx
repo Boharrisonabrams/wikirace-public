@@ -1,11 +1,8 @@
-import Feather from "@expo/vector-icons/Feather";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   Linking,
   Platform,
-  Pressable,
   ScrollView,
   Share,
   StyleSheet,
@@ -19,6 +16,15 @@ import {
   PrimaryAction,
   SecondaryAction,
 } from "@/components/editorial-ui";
+import { ResultMasthead } from "@/components/result/result-masthead";
+import { ResultRoute } from "@/components/result/result-route";
+import { ResultSearchTierChoice } from "@/components/result/result-search-tier-choice";
+import { ResultStandings } from "@/components/result/result-standings";
+import { ResultStats } from "@/components/result/result-stats";
+import {
+  ResultErrorView,
+  ResultLoadingView,
+} from "@/components/result/result-status";
 import { useAppTheme, type AppTheme } from "@/hooks/use-app-theme";
 import { useAuthSession } from "@/hooks/use-auth-session";
 import {
@@ -71,7 +77,6 @@ function optionalBoolean(value: string | undefined): boolean | undefined {
 export default function ResultScreen() {
   const params = useLocalSearchParams();
   const theme = useAppTheme();
-  const { colors } = theme;
   const styles = useMemo(() => makeStyles(theme), [theme]);
   const { isGuest, loading: authLoading, user } = useAuthSession();
   const sessionId = firstParam(params.sessionId);
@@ -375,35 +380,11 @@ export default function ResultScreen() {
   }
 
   if (loading || authLoading) {
-    return (
-      <View accessibilityLiveRegion="polite" style={styles.centered}>
-        <ActivityIndicator color={colors.accent} />
-        <Text selectable style={styles.mutedText}>
-          Saving result…
-        </Text>
-      </View>
-    );
+    return <ResultLoadingView />;
   }
 
   if (error || !result || !presentation) {
-    return (
-      <View style={styles.centered}>
-        <View style={styles.errorIcon}>
-          <Feather color={colors.danger} name="alert-circle" size={22} />
-        </View>
-        <Text accessibilityRole="alert" selectable style={styles.errorText}>
-          {error ?? "Result unavailable."}
-        </Text>
-        <View style={styles.centeredAction}>
-          <PrimaryAction
-            icon="home"
-            label="Back home"
-            onPress={() => router.dismissTo("/")}
-            testID="result-error-home"
-          />
-        </View>
-      </View>
-    );
+    return <ResultErrorView error={error} />;
   }
 
   return (
@@ -413,283 +394,17 @@ export default function ResultScreen() {
       style={styles.page}
     >
       <EditorialCard style={styles.resultCard}>
-        <View
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-          style={styles.mastheadRule}
-        >
-          <View style={styles.mastheadRuleInner} />
-        </View>
+        <ResultMasthead presentation={presentation} result={result} />
 
-        <View style={styles.masthead}>
-          <View
-            accessibilityElementsHidden
-            importantForAccessibility="no-hide-descendants"
-            style={[
-              styles.outcomeIcon,
-              result.won ? styles.outcomeIconWon : styles.outcomeIconMissed,
-            ]}
-          >
-            <Feather
-              color={result.won ? colors.success : colors.inkMuted}
-              name={result.won ? "check" : "flag"}
-              size={21}
-            />
-          </View>
-          <Text selectable style={styles.kicker}>
-            {presentation.kicker}
-            {" · "}
-            {presentation.startArticle} → {result.endArticle}
-          </Text>
-          <Text
-            accessibilityLabel={presentation.headline}
-            accessibilityRole="header"
-            selectable
-            style={[styles.title, !result.won && styles.titleMissed]}
-          >
-            {result.won ? (
-              <>
-                You reached{" "}
-                <Text style={styles.titleTarget}>{result.endArticle}</Text>.
-              </>
-            ) : (
-              presentation.headline
-            )}
-          </Text>
-          {!result.won ? (
-            <Text selectable style={styles.subtitle}>
-              {presentation.detail}
-            </Text>
-          ) : null}
-        </View>
+        <ResultStats presentation={presentation} result={result} />
 
-        <View style={styles.statsGrid}>
-          {presentation.stats.map((stat) => (
-            <View
-              key={stat.label}
-              accessible
-              accessibilityLabel={`${stat.label}: ${stat.value}`}
-              style={styles.stat}
-            >
-              <Text
-                accessibilityElementsHidden
-                importantForAccessibility="no-hide-descendants"
-                selectable
-                style={styles.statValue}
-              >
-                {stat.value}
-              </Text>
-              <Text
-                accessibilityElementsHidden
-                importantForAccessibility="no-hide-descendants"
-                selectable
-                style={styles.statLabel}
-              >
-                {stat.label}
-              </Text>
-            </View>
-          ))}
-        </View>
+        <ResultStandings presentation={presentation} />
 
-        {presentation.showStreak && result.streak?.extended ? (
-          <View style={styles.streakNote}>
-            <Feather
-              accessibilityElementsHidden
-              color={colors.success}
-              importantForAccessibility="no-hide-descendants"
-              name="trending-up"
-              size={15}
-            />
-            <Text selectable style={styles.streakNoteText}>
-              Daily streak extended. Longest streak: {result.streak.longest}.
-            </Text>
-          </View>
-        ) : null}
-
-        {presentation.rankCards.length > 0 ? (
-          <View style={styles.rankingSection}>
-            <Text
-              accessibilityRole="header"
-              selectable
-              style={styles.routeTitle}
-            >
-              Today&apos;s standings
-            </Text>
-            {presentation.championSweep ? (
-              <View
-                accessible
-                accessibilityLabel="Daily champion sweep. Number one in Shortest Path and Fastest Solve."
-                style={styles.sweepNote}
-              >
-                <Feather
-                  accessibilityElementsHidden
-                  color={colors.warning}
-                  importantForAccessibility="no-hide-descendants"
-                  name="award"
-                  size={17}
-                />
-                <Text
-                  accessibilityElementsHidden
-                  importantForAccessibility="no-hide-descendants"
-                  selectable
-                  style={styles.sweepText}
-                >
-                  Daily champion sweep
-                </Text>
-              </View>
-            ) : null}
-            <View style={styles.rankGrid}>
-              {presentation.rankCards.map((card) => (
-                <View
-                  key={card.board}
-                  accessible
-                  accessibilityLabel={`${card.label}: ${card.value}. ${
-                    card.champion ? "Daily champion. " : ""
-                  }${card.detail}.`}
-                  style={[
-                    styles.rankCard,
-                    card.champion && styles.championCard,
-                  ]}
-                >
-                  <Text
-                    accessibilityElementsHidden
-                    importantForAccessibility="no-hide-descendants"
-                    selectable
-                    style={styles.rankLabel}
-                  >
-                    {card.label}
-                  </Text>
-                  <Text
-                    accessibilityElementsHidden
-                    importantForAccessibility="no-hide-descendants"
-                    selectable
-                    style={styles.rankValue}
-                  >
-                    {card.value}
-                  </Text>
-                  <Text
-                    accessibilityElementsHidden
-                    importantForAccessibility="no-hide-descendants"
-                    selectable
-                    style={styles.rankDetail}
-                  >
-                    {card.champion ? "Daily champion · " : ""}
-                    {card.detail}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        ) : null}
-        {presentation.rankTease ? (
-          <View
-            accessible
-            accessibilityLabel={`${presentation.rankTease.copy}. ${presentation.rankTease.ctaLabel}.`}
-            style={styles.rankTeaseCard}
-          >
-            <Feather
-              accessibilityElementsHidden
-              color={colors.warning}
-              importantForAccessibility="no-hide-descendants"
-              name="award"
-              size={17}
-            />
-            <View style={styles.rankTeaseCopyBlock}>
-              <Text
-                accessibilityElementsHidden
-                importantForAccessibility="no-hide-descendants"
-                selectable
-                style={styles.rankTeaseCopy}
-              >
-                {presentation.rankTease.copy}
-              </Text>
-              <Text
-                accessibilityElementsHidden
-                importantForAccessibility="no-hide-descendants"
-                selectable
-                style={styles.rankTeaseDetail}
-              >
-                Save this guest result to join today&apos;s claimed standings.
-              </Text>
-            </View>
-          </View>
-        ) : null}
-
-        <View style={styles.routeSection}>
-          <Text accessibilityRole="header" selectable style={styles.routeTitle}>
-            Your route
-          </Text>
-
-          <View style={styles.routeList}>
-            {result.path.length > 0 ? (
-              result.path.map((title, index) => {
-                const isWinningStep =
-                  result.won && index === result.path.length - 1;
-                return (
-                  <View
-                    key={`${title}-${index}`}
-                    accessible
-                    accessibilityLabel={`Step ${index + 1} of ${result.path.length}: ${title}`}
-                    style={styles.pathRow}
-                  >
-                    <Text
-                      accessibilityElementsHidden
-                      importantForAccessibility="no-hide-descendants"
-                      selectable
-                      style={styles.pathIndex}
-                    >
-                      {index + 1}.
-                    </Text>
-                    <Text
-                      accessibilityElementsHidden
-                      importantForAccessibility="no-hide-descendants"
-                      selectable
-                      style={[
-                        styles.pathTitle,
-                        isWinningStep && styles.pathTitleWon,
-                      ]}
-                    >
-                      {title}
-                    </Text>
-                  </View>
-                );
-              })
-            ) : (
-              <Text selectable style={styles.emptyRoute}>
-                No route recorded.
-              </Text>
-            )}
-
-            {presentation.targetMissed ? (
-              <View
-                accessible
-                accessibilityLabel={`Target not reached: ${presentation.targetMissed}`}
-                style={styles.targetMissed}
-              >
-                <Text
-                  accessibilityElementsHidden
-                  importantForAccessibility="no-hide-descendants"
-                  style={styles.targetMissedMark}
-                >
-                  ×
-                </Text>
-                <Text
-                  accessibilityElementsHidden
-                  importantForAccessibility="no-hide-descendants"
-                  selectable
-                  style={styles.targetMissedText}
-                >
-                  never reached {presentation.targetMissed}
-                </Text>
-              </View>
-            ) : null}
-          </View>
-        </View>
+        <ResultRoute presentation={presentation} result={result} />
 
         <View style={styles.actions}>
           <ResultSearchTierChoice
             selected={searchTier}
-            styles={styles}
             onChange={setSearchTier}
           />
           {presentation.accountAction ? (
@@ -816,58 +531,7 @@ export default function ResultScreen() {
   );
 }
 
-function ResultSearchTierChoice({
-  selected,
-  styles,
-  onChange,
-}: {
-  selected: SearchTier;
-  styles: ReturnType<typeof makeStyles>;
-  onChange: (value: SearchTier) => void;
-}) {
-  const options: Array<{ value: SearchTier; label: string }> = [
-    { value: "find", label: "Find only" },
-    { value: "palette", label: "Full palette" },
-  ];
-
-  return (
-    <View style={styles.searchTierBlock}>
-      <Text style={styles.searchTierLabel}>Search on new challenge links</Text>
-      <View style={styles.searchTierRow}>
-        {options.map((option) => {
-          const active = selected === option.value;
-          return (
-            <Pressable
-              key={option.value}
-              accessibilityRole="radio"
-              accessibilityState={{ checked: active }}
-              onPress={() => onChange(option.value)}
-              style={[
-                styles.searchTierChip,
-                active && styles.searchTierChipActive,
-              ]}
-              testID={`result-search-tier-${option.value}`}
-            >
-              <Text
-                style={[
-                  styles.searchTierChipText,
-                  active && styles.searchTierChipTextActive,
-                ]}
-              >
-                {option.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-      <Text style={styles.searchTierHint}>
-        Find only hides the links list. Full palette keeps both links and find.
-      </Text>
-    </View>
-  );
-}
-
-function makeStyles({ colors, fonts, isDark }: AppTheme) {
+function makeStyles({ colors, fonts }: AppTheme) {
   return StyleSheet.create({
     page: {
       backgroundColor: colors.chrome,
@@ -883,323 +547,9 @@ function makeStyles({ colors, fonts, isDark }: AppTheme) {
       padding: 16,
       width: "100%",
     },
-    mastheadRule: {
-      backgroundColor: colors.ink,
-      height: 4,
-      justifyContent: "flex-end",
-      marginBottom: 22,
-      opacity: isDark ? 0.75 : 0.86,
-      paddingBottom: 1,
-    },
-    mastheadRuleInner: {
-      backgroundColor: colors.surface,
-      height: 1,
-    },
-    masthead: {
-      alignItems: "flex-start",
-    },
-    outcomeIcon: {
-      alignItems: "center",
-      borderRadius: 20,
-      height: 40,
-      justifyContent: "center",
-      marginBottom: 12,
-      width: 40,
-    },
-    outcomeIconWon: {
-      backgroundColor: colors.successSoft,
-    },
-    outcomeIconMissed: {
-      backgroundColor: colors.surfaceMuted,
-    },
-    kicker: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sansMedium,
-      fontSize: 10,
-      letterSpacing: 1.05,
-      lineHeight: 15,
-      textTransform: "uppercase",
-    },
-    title: {
-      color: colors.inkStrong,
-      fontFamily: fonts.serif,
-      fontSize: 31,
-      lineHeight: 38,
-      marginTop: 7,
-    },
-    titleMissed: {
-      color: colors.inkMuted,
-    },
-    titleTarget: {
-      color: colors.link,
-    },
-    subtitle: {
-      color: colors.inkMuted,
-      fontFamily: fonts.serifItalic,
-      fontSize: 14,
-      lineHeight: 21,
-      marginTop: 7,
-    },
-    statsGrid: {
-      backgroundColor: colors.borderSoft,
-      borderColor: colors.border,
-      borderWidth: StyleSheet.hairlineWidth,
-      flexDirection: "row",
-      gap: StyleSheet.hairlineWidth,
-      marginTop: 22,
-    },
-    stat: {
-      alignItems: "center",
-      backgroundColor: colors.surface,
-      flex: 1,
-      justifyContent: "center",
-      minHeight: 78,
-      paddingHorizontal: 4,
-      paddingVertical: 11,
-    },
-    statValue: {
-      color: colors.inkStrong,
-      fontFamily: fonts.serifBold,
-      fontSize: 23,
-      fontVariant: ["tabular-nums"],
-      lineHeight: 29,
-      textAlign: "center",
-    },
-    statLabel: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sansMedium,
-      fontSize: 9,
-      letterSpacing: 0.8,
-      lineHeight: 14,
-      textAlign: "center",
-      textTransform: "uppercase",
-    },
-    streakNote: {
-      alignItems: "center",
-      backgroundColor: colors.successSoft,
-      flexDirection: "row",
-      gap: 7,
-      marginTop: 12,
-      paddingHorizontal: 11,
-      paddingVertical: 9,
-    },
-    streakNoteText: {
-      color: colors.success,
-      flex: 1,
-      fontFamily: fonts.sansMedium,
-      fontSize: 12,
-      lineHeight: 17,
-    },
-    rankingSection: {
-      gap: 9,
-      marginTop: 24,
-    },
-    rankTeaseCard: {
-      alignItems: "flex-start",
-      backgroundColor: colors.warningSoft,
-      borderColor: colors.warning,
-      borderRadius: 22,
-      borderWidth: 1,
-      flexDirection: "row",
-      gap: 10,
-      marginTop: 18,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-    },
-    rankTeaseCopyBlock: {
-      flex: 1,
-      gap: 3,
-    },
-    rankTeaseCopy: {
-      color: colors.inkStrong,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 16,
-      lineHeight: 20,
-    },
-    rankTeaseDetail: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sans,
-      fontSize: 13,
-      lineHeight: 18,
-    },
-    sweepNote: {
-      alignItems: "center",
-      backgroundColor: colors.warningSoft,
-      flexDirection: "row",
-      gap: 7,
-      paddingHorizontal: 11,
-      paddingVertical: 9,
-    },
-    sweepText: {
-      color: colors.warning,
-      flex: 1,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 12,
-      lineHeight: 17,
-      textTransform: "uppercase",
-    },
-    rankGrid: {
-      flexDirection: "row",
-      flexWrap: "wrap",
-      gap: 9,
-    },
-    rankCard: {
-      backgroundColor: colors.surfaceMuted,
-      borderColor: colors.border,
-      borderWidth: 1,
-      flex: 1,
-      minWidth: 138,
-      padding: 12,
-    },
-    championCard: {
-      backgroundColor: colors.warningSoft,
-      borderColor: colors.warning,
-    },
-    rankLabel: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 9,
-      letterSpacing: 0.7,
-      lineHeight: 14,
-      textTransform: "uppercase",
-    },
-    rankValue: {
-      color: colors.inkStrong,
-      fontFamily: fonts.serifBold,
-      fontSize: 25,
-      fontVariant: ["tabular-nums"],
-      lineHeight: 31,
-      marginTop: 2,
-    },
-    rankDetail: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sans,
-      fontSize: 10,
-      lineHeight: 15,
-      marginTop: 3,
-    },
-    routeSection: {
-      marginTop: 24,
-    },
-    routeTitle: {
-      borderBottomColor: colors.border,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      color: colors.inkStrong,
-      fontFamily: fonts.serifBold,
-      fontSize: 20,
-      lineHeight: 27,
-      paddingBottom: 3,
-    },
-    routeList: {
-      paddingTop: 6,
-    },
-    pathRow: {
-      alignItems: "baseline",
-      flexDirection: "row",
-      gap: 8,
-      minHeight: 32,
-      paddingVertical: 5,
-    },
-    pathIndex: {
-      color: colors.inkMuted,
-      fontFamily: fonts.mono,
-      fontSize: 12,
-      fontVariant: ["tabular-nums"],
-      lineHeight: 19,
-      textAlign: "right",
-      width: 28,
-    },
-    pathTitle: {
-      color: colors.ink,
-      flex: 1,
-      fontFamily: fonts.sansMedium,
-      fontSize: 14,
-      lineHeight: 20,
-    },
-    pathTitleWon: {
-      color: colors.success,
-      fontFamily: fonts.sansSemiBold,
-    },
-    emptyRoute: {
-      color: colors.inkMuted,
-      fontFamily: fonts.serifItalic,
-      fontSize: 14,
-      lineHeight: 21,
-      paddingVertical: 10,
-    },
-    targetMissed: {
-      alignItems: "baseline",
-      flexDirection: "row",
-      gap: 8,
-      minHeight: 32,
-      paddingVertical: 5,
-    },
-    targetMissedMark: {
-      color: colors.danger,
-      fontFamily: fonts.sansBold,
-      fontSize: 15,
-      lineHeight: 20,
-      textAlign: "right",
-      width: 28,
-    },
-    targetMissedText: {
-      color: colors.inkMuted,
-      flex: 1,
-      fontFamily: fonts.serifItalic,
-      fontSize: 14,
-      lineHeight: 20,
-    },
     actions: {
       gap: 9,
       marginTop: 26,
-    },
-    searchTierBlock: {
-      gap: 8,
-      marginBottom: 2,
-    },
-    searchTierLabel: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 11,
-      letterSpacing: 0.8,
-      lineHeight: 15,
-      textAlign: "center",
-      textTransform: "uppercase",
-    },
-    searchTierRow: {
-      flexDirection: "row",
-      gap: 8,
-    },
-    searchTierChip: {
-      alignItems: "center",
-      backgroundColor: colors.surfaceMuted,
-      borderColor: colors.border,
-      borderWidth: 1,
-      flex: 1,
-      justifyContent: "center",
-      minHeight: 42,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-    },
-    searchTierChipActive: {
-      backgroundColor: colors.accentSoft,
-      borderColor: colors.accent,
-    },
-    searchTierChipText: {
-      color: colors.inkStrong,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 13,
-      lineHeight: 18,
-    },
-    searchTierChipTextActive: {
-      color: colors.accent,
-    },
-    searchTierHint: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sans,
-      fontSize: 12,
-      lineHeight: 17,
-      textAlign: "center",
     },
     accountError: {
       color: colors.danger,
@@ -1213,41 +563,6 @@ function makeStyles({ colors, fonts, isDark }: AppTheme) {
       fontFamily: fonts.sans,
       fontSize: 12,
       lineHeight: 18,
-      textAlign: "center",
-    },
-    centered: {
-      alignItems: "stretch",
-      backgroundColor: colors.chrome,
-      flex: 1,
-      gap: 12,
-      justifyContent: "center",
-      padding: 24,
-    },
-    centeredAction: {
-      alignSelf: "center",
-      marginTop: 4,
-      minWidth: 210,
-    },
-    errorIcon: {
-      alignItems: "center",
-      alignSelf: "center",
-      backgroundColor: colors.dangerSoft,
-      borderRadius: 22,
-      height: 44,
-      justifyContent: "center",
-      width: 44,
-    },
-    mutedText: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sans,
-      fontSize: 14,
-      textAlign: "center",
-    },
-    errorText: {
-      color: colors.danger,
-      fontFamily: fonts.sans,
-      fontSize: 15,
-      lineHeight: 22,
       textAlign: "center",
     },
   });
