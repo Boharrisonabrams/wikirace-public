@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import * as React from "react";
+import { act } from "react";
 import { Alert, Keyboard } from "react-native";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -91,15 +92,19 @@ function postedCommands(): Array<Record<string, unknown>> {
 }
 
 async function sendArticleMessage(message: Record<string, unknown>) {
-  await webView.props?.onMessage?.({
-    nativeEvent: { data: JSON.stringify(message) },
+  await act(async () => {
+    await webView.props?.onMessage?.({
+      nativeEvent: { data: JSON.stringify(message) },
+    });
   });
   await flush();
 }
 
 async function renderLoadedGame() {
   const screen = await render(<GameScreen />);
-  webView.props?.onLoadEnd?.();
+  await act(async () => {
+    webView.props?.onLoadEnd?.();
+  });
   await flush();
   const documentId = String(
     postedCommands().find((command) => command.type === "links/collect")
@@ -238,7 +243,9 @@ describe("GameScreen", () => {
     const [title, body, buttons] = vi.mocked(Alert.alert).mock.calls[0] ?? [];
     expect(title).toBe("Give up?");
     expect(body).toBe("Reveal the target: Moon");
-    buttons?.find((button) => button.text === "Give up")?.onPress?.();
+    await act(async () => {
+      buttons?.find((button) => button.text === "Give up")?.onPress?.();
+    });
     await flush();
 
     expect(mocks.api.completeGame).toHaveBeenCalledWith("session-1", true);

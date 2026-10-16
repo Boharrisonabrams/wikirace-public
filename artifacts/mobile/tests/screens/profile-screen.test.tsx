@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import * as React from "react";
+import { act } from "react";
 import { Alert, Linking } from "react-native";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -304,7 +305,9 @@ describe("ProfileScreen", () => {
     await press(getByLabel(container, "Delete account"));
     const [title, , buttons] = vi.mocked(Alert.alert).mock.calls[0] ?? [];
     expect(title).toBe("Delete account?");
-    buttons?.find((button) => button.text === "Delete account")?.onPress?.();
+    await act(async () => {
+      buttons?.find((button) => button.text === "Delete account")?.onPress?.();
+    });
     await flush();
 
     expect(mocks.api.deleteAccount).toHaveBeenCalledTimes(1);
