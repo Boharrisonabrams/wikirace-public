@@ -184,6 +184,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.105.1
         version: 2.105.1
+      '@workspace/game-client':
+        specifier: workspace:*
+        version: link:../../lib/game-client
       '@workspace/share-intent':
         specifier: workspace:*
         version: link:../../lib/share-intent
@@ -296,6 +299,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.105.1
         version: 2.105.1
+      '@workspace/game-client':
+        specifier: workspace:*
+        version: link:../../lib/game-client
       '@workspace/share-intent':
         specifier: workspace:*
         version: link:../../lib/share-intent
@@ -516,6 +522,16 @@ importers:
       zod:
         specifier: 'catalog:'
         version: 3.25.76
+
+  lib/game-client:
+    dependencies:
+      '@supabase/supabase-js':
+        specifier: ^2.105.1
+        version: 2.105.1
+    devDependencies:
+      vitest:
+        specifier: 4.1.10
+        version: 4.1.10(@types/node@25.3.5)(jiti@2.6.1)(jsdom@29.1.1)(lightningcss@1.31.1)(terser@5.48.0)(yaml@2.8.2)
 
   lib/share-intent: {}
 

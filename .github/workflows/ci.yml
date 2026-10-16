@@ -63,6 +63,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Run share-intent tests
         run: pnpm --filter ./artifacts/mobile exec vitest run ../../lib/share-intent/src/index.test.ts --root ../..
+      - name: Run game-client tests
+        run: pnpm --filter ./artifacts/mobile exec vitest run ../../lib/game-client/src --root ../..
 
   web-build:
     name: web-build
