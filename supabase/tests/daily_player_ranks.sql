@@ -43,6 +43,25 @@ values (
   now()
 );
 
+-- The Daily row comes first: game_sessions.challenge_id is a plain
+-- (not deferrable) foreign key to daily_challenges.
+insert into public.daily_challenges (
+  id,
+  challenge_date,
+  start_article,
+  end_article,
+  start_article_title,
+  end_article_title
+)
+values (
+  '10000000-0000-4000-8000-000000000001',
+  '2026-07-10',
+  'Start',
+  'End',
+  'Start',
+  'End'
+);
+
 insert into public.game_sessions (
   user_id,
   challenge_type,
@@ -74,23 +93,6 @@ values (
   0,
   1,
   true
-);
-
-insert into public.daily_challenges (
-  id,
-  challenge_date,
-  start_article,
-  end_article,
-  start_article_title,
-  end_article_title
-)
-values (
-  '10000000-0000-4000-8000-000000000001',
-  '2026-07-10',
-  'Start',
-  'End',
-  'Start',
-  'End'
 );
 
 insert into public.game_sessions (
@@ -140,6 +142,8 @@ select is(
   'exact rank RPC returns one row beyond the API 1000-row cap'
 );
 
+-- Player 1002 has the most clicks of 1003 eligible winners. The zero-active
+-- winner stays on Shortest (one click), so it ranks ahead of every player.
 select is(
   (
     select shortest_rank
@@ -148,7 +152,7 @@ select is(
       '000003ea-0000-4000-8000-000000000000'
     )
   ),
-  1002::bigint,
+  1003::bigint,
   'shortest rank is exact beyond 1000 eligible players'
 );
 
