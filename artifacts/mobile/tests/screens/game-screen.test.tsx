@@ -278,6 +278,21 @@ describe("GameScreen", () => {
     });
   });
 
+  it("sends a timing pause for the session when the screen unmounts", async () => {
+    const { unmount } = await renderLoadedGame();
+    mocks.api.transitionGameTiming.mockClear();
+
+    await unmount();
+    await flush();
+
+    expect(mocks.api.transitionGameTiming).toHaveBeenCalledTimes(1);
+    expect(mocks.api.transitionGameTiming).toHaveBeenCalledWith({
+      action: "pause",
+      eventId: "event-id",
+      sessionId: "session-1",
+    });
+  });
+
   it("exits home from the close button", async () => {
     const { container } = await renderLoadedGame();
 
