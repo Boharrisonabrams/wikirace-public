@@ -46,7 +46,7 @@ Environment variables (names come from the source; `supabase status` prints loca
 
 - API (`artifacts/api-server/.env.local`): `PORT`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`; optional `PUBLIC_APP_URL`, `APPLE_TEAM_ID`, `LOG_LEVEL`, `SERVE_STATIC_DIR`.
 - Web (`artifacts/web/.env.local`, build time): `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, optional `VITE_GOOGLE_AUTH_ENABLED`. Vite also requires `PORT` and `BASE_PATH`.
-- Mobile: `EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, optional `EXPO_PUBLIC_GOOGLE_AUTH_ENABLED` and `EXPO_PUBLIC_APPLE_AUTH_ENABLED`.
+- Mobile: `EXPO_PUBLIC_API_URL`, `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`, optional `EXPO_PUBLIC_GOOGLE_AUTH_ENABLED`, `EXPO_PUBLIC_APPLE_AUTH_ENABLED`, and `EXPO_PUBLIC_APP_URL`. The app config also reads `EAS_PROJECT_ID` for EAS builds and updates.
 
 Tests:
 
@@ -87,7 +87,7 @@ Bo kept these for himself:
 - Template leftovers remain: `lib/db`, `lib/api-spec` and `lib/api-zod` (they describe only `/healthz`), `lib/api-client-react`, `scripts/src/hello.ts`, Replit Vite plugins in the web config, and the Expo starter README and LICENSE in `artifacts/mobile`.
 - Four mobile screens run past 1,100 lines and `reminders.ts` is 1,184 lines. `routes/game.ts` has a long `/game/start` handler and `any`-typed sessions. There is no root lint or format config.
 - Some docs are stale: `docs/ai/task.md` is an early brief, and `artifacts/mobile/AGENTS.md` points at Expo SDK 57 docs while the app pins SDK 54.
-- This export uses placeholders for the public host, support address, EAS project ID, App Store Connect app ID, and Apple Team ID. Set them before a real deploy. The live site at wikirace.day runs from the original checkout with real values; this export has not been deployed. The `docs/ai/evidence/` screenshots and recordings are not included.
+- Deploy-specific values (the public host, EAS project ID, Apple Team ID, and Supabase auth URLs) are read from the environment, with placeholders as defaults. The "Deploy values" table in `docs/DEPLOY.md` lists each variable. Two placeholders still live in files: the App Store Connect app ID in `artifacts/mobile/eas.json`, because EAS CLI does not read it from the environment, and the support address in `artifacts/web/src/lib/legal-content.ts`. The live site at wikirace.day runs from the original checkout with real values; this export has not been deployed. The `docs/ai/evidence/` screenshots and recordings are not included.
 
 <!--
 Screenshots placeholder. The images below do not exist yet, so this section is
