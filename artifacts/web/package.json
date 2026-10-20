@@ -80,6 +80,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.1",
+    "@workspace/game-client": "workspace:*",
     "@workspace/share-intent": "workspace:*",
     "zustand": "^5.0.12"
   }

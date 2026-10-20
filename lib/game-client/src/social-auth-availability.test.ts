@@ -16,7 +16,7 @@ describe("social auth availability", () => {
       resolveSocialAuthVisibility("ios", {
         apple: "false",
         google: "true",
-      }),
+      })
     ).toEqual({ apple: false, google: true, any: true });
   });
 
@@ -25,7 +25,7 @@ describe("social auth availability", () => {
       resolveSocialAuthVisibility("ios", {
         apple: "true",
         google: "false",
-      }),
+      })
     ).toEqual({ apple: true, google: false, any: true });
   });
 
@@ -34,7 +34,7 @@ describe("social auth availability", () => {
       resolveSocialAuthVisibility("web", {
         apple: "false",
         google: "true",
-      }),
+      })
     ).toEqual({ apple: false, google: true, any: true });
   });
 
@@ -43,7 +43,44 @@ describe("social auth availability", () => {
       resolveSocialAuthVisibility("web", {
         apple: "true",
         google: "false",
-      }),
+      })
     ).toEqual({ apple: false, google: false, any: false });
+  });
+});
+
+describe("web client cases", () => {
+  describe("web social auth availability", () => {
+    it("hides unconfigured providers by default", () => {
+      expect(resolveSocialAuthVisibility("web", {})).toEqual({
+        apple: false,
+        google: false,
+        any: false,
+      });
+    });
+
+    it("shows Google only when its flag is enabled", () => {
+      expect(
+        resolveSocialAuthVisibility("web", {
+          google: "true",
+        })
+      ).toEqual({
+        apple: false,
+        google: true,
+        any: true,
+      });
+    });
+
+    it("keeps Apple unavailable on web even if a future flag appears", () => {
+      expect(
+        resolveSocialAuthVisibility("web", {
+          apple: "true",
+          google: "false",
+        })
+      ).toEqual({
+        apple: false,
+        google: false,
+        any: false,
+      });
+    });
   });
 });

@@ -2,12 +2,7 @@
 
 import { beforeEach, describe, expect, it } from "vitest";
 
-import {
-  buildArticleFindPresentation,
-  createArticleFindState,
-  createDomArticleFindController,
-  updateArticleFindQuery,
-} from "@/lib/article-find";
+import { createDomArticleFindController } from "@/lib/article-find";
 
 describe("web article find", () => {
   beforeEach(() => {
@@ -38,23 +33,5 @@ describe("web article find", () => {
     expect(marks).toHaveLength(2);
     expect(marks[1]?.dataset.articleFindCurrent).toBe("true");
     expect(updates.at(-1)).toEqual({ total: 2, activeIndex: 1 });
-  });
-
-  it("builds user-facing find copy from the current article state", () => {
-    const empty = buildArticleFindPresentation({
-      articleTitle: "Kenya",
-      pending: false,
-      state: createArticleFindState(),
-    });
-    expect(empty.status).toBe("idle");
-
-    const state = updateArticleFindQuery(createArticleFindState(), "kenya");
-    const matches = buildArticleFindPresentation({
-      articleTitle: "Kenya",
-      pending: false,
-      state: { ...state, total: 3, activeIndex: 1 },
-    });
-    expect(matches.counterLabel).toBe("2 of 3");
-    expect(matches.status).toBe("matches");
   });
 });

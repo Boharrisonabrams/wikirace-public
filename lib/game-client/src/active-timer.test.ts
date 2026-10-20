@@ -27,9 +27,7 @@ describe("active timer decisions", () => {
       nowMs: 100,
     });
 
-    expect(
-      reduceActiveTimer(initial, { type: "webview-ready", nowMs: 500 }),
-    ).toMatchObject({
+    expect(reduceActiveTimer(initial, { type: "webview-ready", nowMs: 500 })).toMatchObject({
       action: "resume",
       state: {
         activeTimeMs: 2_000,
@@ -40,14 +38,12 @@ describe("active timer decisions", () => {
   });
 
   it("pauses optimistically before a move", () => {
-    const ready = reduceActiveTimer(
-      createActiveTimerState({ activeTimeMs: 2_000, nowMs: 100 }),
-      { type: "webview-ready", nowMs: 500 },
-    ).state;
+    const ready = reduceActiveTimer(createActiveTimerState({ activeTimeMs: 2_000, nowMs: 100 }), {
+      type: "webview-ready",
+      nowMs: 500,
+    }).state;
 
-    expect(
-      reduceActiveTimer(ready, { type: "move-start", nowMs: 2_500 }),
-    ).toMatchObject({
+    expect(reduceActiveTimer(ready, { type: "move-start", nowMs: 2_500 })).toMatchObject({
       action: "pause",
       state: {
         activeTimeMs: 4_000,
@@ -68,9 +64,7 @@ describe("active timer decisions", () => {
       nowMs: 2_000,
     }).state;
 
-    expect(
-      reduceActiveTimer(moving, { type: "move-failed", nowMs: 2_500 }),
-    ).toMatchObject({
+    expect(reduceActiveTimer(moving, { type: "move-failed", nowMs: 2_500 })).toMatchObject({
       action: "resume",
       state: {
         articleReady: true,
@@ -91,7 +85,7 @@ describe("active timer decisions", () => {
         type: "app-state",
         appActive: false,
         nowMs: 4_000,
-      }),
+      })
     ).toMatchObject({
       action: "pause",
       state: {
@@ -127,7 +121,7 @@ describe("active timer decisions", () => {
       reduceActiveTimer(foregrounded.state, {
         type: "webview-ready",
         nowMs: 2_500,
-      }).action,
+      }).action
     ).toBe("resume");
   });
 
@@ -154,7 +148,7 @@ describe("active timer decisions", () => {
         type: "app-state",
         appActive: true,
         nowMs: 2_000,
-      }),
+      })
     ).toMatchObject({
       action: "resume",
       state: { appActive: true, timingActive: true },
@@ -171,7 +165,7 @@ describe("active timer decisions", () => {
       reduceActiveTimer(ready, {
         type: "heartbeat-tick",
         nowMs: 1_000 + HEARTBEAT_INTERVAL_MS - 1,
-      }).action,
+      }).action
     ).toBeNull();
 
     const heartbeat = reduceActiveTimer(ready, {
@@ -189,28 +183,28 @@ describe("active timer decisions", () => {
       reduceActiveTimer(paused, {
         type: "heartbeat-tick",
         nowMs: 1_000 + HEARTBEAT_INTERVAL_MS * 2,
-      }).action,
+      }).action
     ).toBeNull();
   });
 
   it("reconciles the optimistic display to server milliseconds", () => {
-    const ready = reduceActiveTimer(
-      createActiveTimerState({ activeTimeMs: 2_000 }),
-      { type: "webview-ready", nowMs: 1_000 },
-    ).state;
+    const ready = reduceActiveTimer(createActiveTimerState({ activeTimeMs: 2_000 }), {
+      type: "webview-ready",
+      nowMs: 1_000,
+    }).state;
     expect(displayedActiveTimeMs(ready, 4_000)).toBe(5_000);
 
     const reconciledActive = reconcileActiveTimer(
       ready,
       { activeTimeMs: 4_500, timingActive: true },
-      4_000,
+      4_000
     );
     expect(displayedActiveTimeMs(reconciledActive, 5_000)).toBe(5_500);
 
     const reconciledPaused = reconcileActiveTimer(
       reconciledActive,
       { activeTimeMs: 5_200, timingActive: false },
-      6_000,
+      6_000
     );
     expect(displayedActiveTimeMs(reconciledPaused, 20_000)).toBe(5_200);
   });

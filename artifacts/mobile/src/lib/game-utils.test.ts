@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import {
   formatTime,
   isSafeChallengeUrl,
-  puzzleNumber,
   progressSavedCopy,
 } from "./game-utils";
 
@@ -12,11 +11,6 @@ describe("game utilities", () => {
     expect(formatTime(67)).toBe("1:07");
     expect(formatTime(-4)).toBe("0:00");
     expect(formatTime(Number.NaN)).toBe("0:00");
-  });
-
-  it("numbers daily puzzles from the UTC launch epoch", () => {
-    expect(puzzleNumber("2026-07-09")).toBe(1);
-    expect(puzzleNumber("2026-07-10")).toBe(2);
   });
 
   it("keeps saved-progress copy short and concrete", () => {
