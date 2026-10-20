@@ -5,7 +5,6 @@ import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import * as Updates from "expo-updates";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   AppState,
   Platform,
   Pressable,
@@ -22,10 +21,20 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   EditorialCard,
   PrimaryAction,
-  SecondaryAction,
   SectionHeading,
   WikiRaceWordmark,
 } from "@/components/editorial-ui";
+import { HomeDailyActions } from "@/components/home/home-daily-actions";
+import { HomeDebugReminderCard } from "@/components/home/home-debug-reminder-card";
+import { HomeFooter } from "@/components/home/home-footer";
+import { HomeHowToPlay } from "@/components/home/home-how-to-play";
+import { HomeSeeAlso } from "@/components/home/home-see-also";
+import { HomeStatsSection } from "@/components/home/home-stats-section";
+import {
+  HomeErrorCard,
+  HomeLoadingCard,
+  HomeUnavailableCard,
+} from "@/components/home/home-status-cards";
 import { useAppTheme, type AppTheme } from "@/hooks/use-app-theme";
 import { useAuthSession } from "@/hooks/use-auth-session";
 import { editorialType } from "@/constants/theme";
@@ -34,7 +43,7 @@ import {
   isCurrentDailyDate,
   isCurrentDailySessionDate,
 } from "@/lib/daily-date";
-import { formatTime, progressSavedCopy, puzzleNumber } from "@/lib/game-utils";
+import { puzzleNumber } from "@/lib/game-utils";
 import {
   formatIssuedDate,
   getHomeAccountAction,
@@ -52,10 +61,6 @@ import { scheduleReminderTest } from "@/lib/reminders";
 import { getSupabase } from "@/lib/supabase";
 import { formatMobileVersionStamp } from "@/lib/version-stamp";
 import type { DailyChallenge, GameSession, ProfileStats } from "@/lib/types";
-
-function pluralize(value: number, singular: string, plural = `${singular}s`) {
-  return `${value} ${value === 1 ? singular : plural}`;
-}
 
 function impact(style: Haptics.ImpactFeedbackStyle) {
   if (Platform.OS !== "web") void Haptics.impactAsync(style);
@@ -366,79 +371,24 @@ export default function HomeScreen() {
         </View>
 
         {debugReminderControl ? (
-          <EditorialCard style={styles.debugReminderCard}>
-            <Text style={styles.debugReminderTitle}>
-              Development notification proof
-            </Text>
-            <Pressable
-              accessibilityLabel={debugReminderControl.accessibilityLabel}
-              accessibilityRole="button"
-              accessibilityState={{
-                busy: debugReminderStatus === "loading",
-                disabled: debugReminderControl.disabled,
-              }}
-              disabled={debugReminderControl.disabled}
-              onPress={() => void scheduleDebugReminder()}
-              role="button"
-              style={({ pressed }) => [
-                styles.debugReminderAction,
-                pressed && styles.pressed,
-              ]}
-              testID={debugReminderControl.buttonTestID}
-            >
-              <Feather
-                accessibilityElementsHidden
-                color={colors.link}
-                importantForAccessibility="no-hide-descendants"
-                name="bell"
-                size={15}
-              />
-              <Text style={styles.debugReminderActionText}>
-                {debugReminderControl.buttonLabel}
-              </Text>
-            </Pressable>
-            <Text
-              accessibilityLiveRegion="polite"
-              selectable
-              style={[
-                styles.debugReminderStatus,
-                debugReminderStatus === "error" && styles.errorText,
-              ]}
-              testID={debugReminderControl.statusTestID}
-            >
-              {debugReminderControl.statusText}
-            </Text>
-          </EditorialCard>
+          <HomeDebugReminderCard
+            debugReminderControl={debugReminderControl}
+            debugReminderStatus={debugReminderStatus}
+            onSchedule={() => void scheduleDebugReminder()}
+          />
         ) : null}
 
         {loading || authLoading ? (
-          <EditorialCard style={styles.loadingCard}>
-            <ActivityIndicator color={colors.accent} />
-            <Text accessibilityLiveRegion="polite" style={styles.loadingText}>
-              Opening today's encyclopedia…
-            </Text>
-          </EditorialCard>
+          <HomeLoadingCard />
         ) : error ? (
-          <EditorialCard style={styles.errorCard}>
-            <Text accessibilityRole="alert" style={styles.errorText}>
-              {error}
-            </Text>
-            <PrimaryAction
-              icon="refresh-cw"
-              label="Try again"
-              onPress={() => {
-                if (bootstrapError) retryBootstrap();
-                else refresh();
-              }}
-            />
-            {bootstrapError ? (
-              <SecondaryAction
-                icon="log-in"
-                label="Sign in with email"
-                onPress={() => router.push("/login")}
-              />
-            ) : null}
-          </EditorialCard>
+          <HomeErrorCard
+            bootstrapError={bootstrapError}
+            error={error}
+            onRetry={() => {
+              if (bootstrapError) retryBootstrap();
+              else refresh();
+            }}
+          />
         ) : challenge ? (
           <EditorialCard>
             <View style={styles.infoboxHeader}>
@@ -472,96 +422,23 @@ export default function HomeScreen() {
                 value="Same start and target for everyone"
               />
 
-              {completed && session ? (
-                <View
-                  style={[
-                    styles.sessionNote,
-                    session.won ? styles.sessionWon : styles.sessionGaveUp,
-                  ]}
-                >
-                  <Feather
-                    accessibilityElementsHidden
-                    color={session.won ? colors.success : colors.warning}
-                    importantForAccessibility="no-hide-descendants"
-                    name={session.won ? "check-circle" : "flag"}
-                    size={16}
-                  />
-                  <Text style={styles.sessionNoteText}>
-                    {session.won
-                      ? `${pluralize(session.clicks, "click")} · ${formatTime(
-                          session.timeSeconds ?? 0,
-                        )}`
-                      : "Route archived. Tomorrow is a fresh race."}
-                  </Text>
-                </View>
-              ) : session ? (
-                <Text style={styles.resumeNote}>
-                  {progressSavedCopy(session.path.length)}
-                </Text>
-              ) : null}
-
-              {primaryAction ? (
-                <PrimaryAction
-                  icon={completed ? "book-open" : "play"}
-                  label={primaryAction.label}
-                  onPress={openPrimaryAction}
-                  testID="play-daily-btn"
-                />
-              ) : null}
-
-              {replayAction ? (
-                <SecondaryAction
-                  icon="rotate-ccw"
-                  label={replayAction.label}
-                  onPress={openReplayAction}
-                  testID="replay-daily-btn"
-                />
-              ) : null}
-
-              {accountAction ? (
-                <>
-                  <SecondaryAction
-                    icon="user-plus"
-                    label={accountAction.label}
-                    loading={
-                      accountAction.kind === "finalize-profile" &&
-                      profileClaimLoading
-                    }
-                    onPress={() => void openAccountAction()}
-                    testID="claim-account-btn"
-                  />
-                  {profileClaimError ? (
-                    <Text
-                      accessibilityRole="alert"
-                      selectable
-                      style={styles.accountErrorText}
-                    >
-                      {profileClaimError}
-                    </Text>
-                  ) : null}
-                </>
-              ) : null}
-
-              {!user ? (
-                <SecondaryAction
-                  icon="log-in"
-                  label="Sign in"
-                  onPress={() => router.push("/login")}
-                />
-              ) : null}
+              <HomeDailyActions
+                accountAction={accountAction}
+                completed={completed}
+                onAccount={() => void openAccountAction()}
+                onPrimary={openPrimaryAction}
+                onReplay={openReplayAction}
+                primaryAction={primaryAction}
+                profileClaimError={profileClaimError}
+                profileClaimLoading={profileClaimLoading}
+                replayAction={replayAction}
+                session={session}
+                signedIn={Boolean(user)}
+              />
             </View>
           </EditorialCard>
         ) : (
-          <EditorialCard style={styles.errorCard}>
-            <Text accessibilityRole="alert" style={styles.errorText}>
-              Today's challenge is unavailable. Pull to refresh and try again.
-            </Text>
-            <PrimaryAction
-              icon="refresh-cw"
-              label="Try again"
-              onPress={refresh}
-            />
-          </EditorialCard>
+          <HomeUnavailableCard onRetry={refresh} />
         )}
 
         {user ? (
@@ -586,116 +463,23 @@ export default function HomeScreen() {
         ) : null}
 
         {profileClaimed === true && stats ? (
-          <View style={styles.section}>
-            <SectionHeading title="Official Daily statistics" />
-            <EditorialCard style={styles.statsCard}>
-              <StatRow label="Games played" value={String(stats.gamesPlayed)} />
-              <StatRow label="Wins" value={String(stats.gamesWon)} />
-              <StatRow
-                label="Current streak"
-                value={pluralize(stats.currentStreak, "day")}
-              />
-              <StatRow
-                label="Best streak"
-                value={pluralize(stats.longestStreak, "day")}
-              />
-              <StatRow
-                label="Average clicks"
-                value={stats.averageClicks?.toFixed(1) ?? "—"}
-              />
-              <StatRow
-                label="Average active time"
-                value={
-                  stats.averageActiveTimeMs === null
-                    ? "—"
-                    : formatTime(Math.round(stats.averageActiveTimeMs / 1_000))
-                }
-              />
-              <StatRow
-                label="Best path"
-                value={
-                  stats.bestClicks === null
-                    ? "—"
-                    : pluralize(stats.bestClicks, "click")
-                }
-              />
-              <StatRow
-                label="Fastest solve"
-                last
-                value={
-                  stats.fastestTimeMs === null
-                    ? "—"
-                    : formatTime(Math.round(stats.fastestTimeMs / 1_000))
-                }
-              />
-            </EditorialCard>
-          </View>
+          <HomeStatsSection stats={stats} />
         ) : null}
 
-        <View style={styles.section}>
-          <SectionHeading title="See also" />
-          <View style={styles.seeAlsoList}>
-            {user ? (
-              <>
-                <SeeAlsoLink
-                  detail="random article pair"
-                  label="Practice mode"
-                  onPress={startPractice}
-                />
-                <SeeAlsoLink
-                  detail="today's fastest paths"
-                  label="Daily leaderboard"
-                  onPress={openLeaderboard}
-                />
-              </>
-            ) : null}
-            <SeeAlsoLink
-              label="How to play (rules)"
-              onPress={scrollToHowToPlay}
-            />
-          </View>
-        </View>
+        <HomeSeeAlso
+          onHowToPlay={scrollToHowToPlay}
+          onLeaderboard={openLeaderboard}
+          onPractice={startPractice}
+          signedIn={Boolean(user)}
+        />
 
-        <View onLayout={captureHowToOffset} style={styles.section}>
-          <SectionHeading title="How to play" />
-          <EditorialCard style={styles.rulesCard}>
-            {[
-              "You start on one Wikipedia article.",
-              "Tap blue article links to move through the encyclopedia.",
-              "Reach the target in as few clicks as possible.",
-              "Use Find in article when you need a doorway on the current page.",
-            ].map((rule, index) => (
-              <View key={rule} style={styles.ruleRow}>
-                <View style={styles.ruleIndex}>
-                  <Text style={styles.ruleIndexText}>{index + 1}</Text>
-                </View>
-                <Text style={styles.ruleText}>{rule}</Text>
-              </View>
-            ))}
-          </EditorialCard>
-        </View>
+        <HomeHowToPlay onLayout={captureHowToOffset} />
 
-        {isClaimed ? (
-          <Pressable
-            accessibilityLabel="Sign out"
-            accessibilityRole="button"
-            onPress={() => void signOut()}
-            style={({ pressed }) => [styles.signOut, pressed && styles.pressed]}
-          >
-            <Feather
-              accessibilityElementsHidden
-              color={colors.inkMuted}
-              importantForAccessibility="no-hide-descendants"
-              name="log-out"
-              size={14}
-            />
-            <Text style={styles.signOutText}>Sign out</Text>
-          </Pressable>
-        ) : null}
-
-        <Text selectable style={styles.versionStamp}>
-          {VERSION_STAMP}
-        </Text>
+        <HomeFooter
+          isClaimed={isClaimed}
+          onSignOut={() => void signOut()}
+          versionStamp={VERSION_STAMP}
+        />
       </ScrollView>
     </View>
   );
@@ -724,50 +508,6 @@ export default function HomeScreen() {
         </Text>
         {detail ? <Text style={styles.infoDetail}>{detail}</Text> : null}
       </View>
-    );
-  }
-
-  function StatRow({
-    label,
-    last,
-    value,
-  }: {
-    label: string;
-    last?: boolean;
-    value: string;
-  }) {
-    return (
-      <View style={[styles.statRow, last && styles.statRowLast]}>
-        <Text style={styles.statLabel}>{label}</Text>
-        <Text style={styles.statValue}>{value}</Text>
-      </View>
-    );
-  }
-
-  function SeeAlsoLink({
-    detail,
-    label,
-    onPress,
-  }: {
-    detail?: string;
-    label: string;
-    onPress: () => void;
-  }) {
-    return (
-      <Pressable
-        accessibilityLabel={detail ? `${label}, ${detail}` : label}
-        accessibilityRole="link"
-        onPress={onPress}
-        style={({ pressed }) => [styles.seeAlsoItem, pressed && styles.pressed]}
-      >
-        <Text style={styles.bullet}>•</Text>
-        <Text style={styles.seeAlsoText}>
-          <Text style={styles.seeAlsoLink}>{label}</Text>
-          {detail ? (
-            <Text style={styles.seeAlsoDetail}> — {detail}</Text>
-          ) : null}
-        </Text>
-      </Pressable>
     );
   }
 }
@@ -827,70 +567,6 @@ function makeStyles({ colors, fonts, radius }: AppTheme, topPadding: number) {
       fontFamily: fonts.serifItalic,
       fontSize: 13,
       lineHeight: 19,
-    },
-    loadingCard: {
-      alignItems: "center",
-      gap: 10,
-      justifyContent: "center",
-      minHeight: 180,
-      padding: 24,
-    },
-    loadingText: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sans,
-      fontSize: 13,
-    },
-    errorCard: {
-      gap: 14,
-      padding: 18,
-    },
-    errorText: {
-      color: colors.danger,
-      fontFamily: fonts.sans,
-      fontSize: 14,
-      lineHeight: 20,
-      textAlign: "center",
-    },
-    accountErrorText: {
-      color: colors.danger,
-      fontFamily: fonts.sans,
-      fontSize: 13,
-      lineHeight: 19,
-      textAlign: "center",
-    },
-    debugReminderCard: {
-      gap: 10,
-      padding: 14,
-    },
-    debugReminderTitle: {
-      color: colors.inkStrong,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 12,
-      letterSpacing: 0.5,
-      textTransform: "uppercase",
-    },
-    debugReminderAction: {
-      alignItems: "center",
-      borderColor: colors.border,
-      borderWidth: 1,
-      flexDirection: "row",
-      gap: 7,
-      justifyContent: "center",
-      minHeight: 44,
-      paddingHorizontal: 12,
-      paddingVertical: 9,
-    },
-    debugReminderActionText: {
-      color: colors.link,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 13,
-    },
-    debugReminderStatus: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sans,
-      fontSize: 12,
-      lineHeight: 18,
-      textAlign: "center",
     },
     infoboxHeader: {
       backgroundColor: colors.surfaceMuted,
@@ -967,38 +643,8 @@ function makeStyles({ colors, fonts, radius }: AppTheme, topPadding: number) {
       color: colors.inkStrong,
       fontFamily: fonts.serifBold,
     },
-    sessionNote: {
-      alignItems: "center",
-      borderRadius: radius.small,
-      flexDirection: "row",
-      gap: 8,
-      paddingHorizontal: 10,
-      paddingVertical: 8,
-    },
-    sessionWon: {
-      backgroundColor: colors.successSoft,
-    },
-    sessionGaveUp: {
-      backgroundColor: colors.warningSoft,
-    },
-    sessionNoteText: {
-      color: colors.ink,
-      flex: 1,
-      fontFamily: fonts.sansMedium,
-      fontSize: 12,
-      lineHeight: 17,
-    },
-    resumeNote: {
-      color: colors.inkMuted,
-      fontFamily: fonts.serifItalic,
-      fontSize: 12,
-      lineHeight: 18,
-    },
     section: {
       gap: 10,
-    },
-    statsCard: {
-      overflow: "hidden",
     },
     privateGameCard: {
       gap: 10,
@@ -1014,117 +660,6 @@ function makeStyles({ colors, fonts, radius }: AppTheme, topPadding: number) {
       fontFamily: fonts.sans,
       ...editorialType.body,
       marginBottom: 2,
-    },
-    statRow: {
-      alignItems: "center",
-      borderBottomColor: colors.borderSoft,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      flexDirection: "row",
-      justifyContent: "space-between",
-      paddingHorizontal: 14,
-      paddingVertical: 11,
-    },
-    statRowLast: {
-      borderBottomWidth: 0,
-    },
-    statLabel: {
-      color: colors.inkMuted,
-      fontFamily: fonts.serif,
-      fontSize: 14,
-    },
-    statValue: {
-      color: colors.inkStrong,
-      fontFamily: fonts.serifBold,
-      fontSize: 14,
-    },
-    seeAlsoList: {
-      gap: 3,
-      paddingHorizontal: 4,
-    },
-    seeAlsoItem: {
-      alignItems: "flex-start",
-      flexDirection: "row",
-      gap: 8,
-      minHeight: 44,
-      paddingVertical: 6,
-    },
-    bullet: {
-      color: colors.ink,
-      fontFamily: fonts.serif,
-      fontSize: 16,
-      lineHeight: 20,
-    },
-    seeAlsoText: {
-      flex: 1,
-      lineHeight: 20,
-    },
-    seeAlsoLink: {
-      color: colors.link,
-      fontFamily: fonts.serif,
-      fontSize: 15,
-      textDecorationColor: colors.border,
-      textDecorationLine: "underline",
-    },
-    seeAlsoDetail: {
-      color: colors.inkMuted,
-      fontFamily: fonts.serif,
-      fontSize: 15,
-    },
-    rulesCard: {
-      gap: 10,
-      padding: 13,
-    },
-    ruleRow: {
-      alignItems: "flex-start",
-      flexDirection: "row",
-      gap: 10,
-    },
-    ruleIndex: {
-      alignItems: "center",
-      backgroundColor: colors.accentSoft,
-      borderColor: colors.borderSoft,
-      borderRadius: 11,
-      borderWidth: 1,
-      height: 22,
-      justifyContent: "center",
-      marginTop: 1,
-      width: 22,
-    },
-    ruleIndexText: {
-      color: colors.accent,
-      fontFamily: fonts.sansSemiBold,
-      fontSize: 11,
-    },
-    ruleText: {
-      color: colors.ink,
-      flex: 1,
-      fontFamily: fonts.serif,
-      fontSize: 14,
-      lineHeight: 20,
-    },
-    signOut: {
-      alignItems: "center",
-      alignSelf: "center",
-      flexDirection: "row",
-      gap: 6,
-      minHeight: 44,
-      paddingHorizontal: 18,
-      paddingVertical: 12,
-    },
-    signOutText: {
-      color: colors.inkMuted,
-      fontFamily: fonts.sans,
-      fontSize: 12,
-      textDecorationLine: "underline",
-    },
-    versionStamp: {
-      alignSelf: "center",
-      color: colors.inkMuted,
-      fontFamily: fonts.sans,
-      fontSize: 11,
-      lineHeight: 16,
-      marginTop: -8,
-      paddingBottom: 4,
     },
     pressed: {
       opacity: 0.68,
